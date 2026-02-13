@@ -391,7 +391,7 @@ const istatistikler = useMemo(() => {
   };
 }, [iyilikler]);
 
-const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+const isAdminRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/admin') || new URLSearchParams(window.location.search).get('admin') === '1');
 
 const submit = async (e) => {
 
