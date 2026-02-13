@@ -171,72 +171,68 @@ export default function App() {
   };
 
   return (
-    <div className="scene">
+    <div className="app">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,500;9..144,700&display=swap');
 
         :root {
-          --bg: #f8f5ee;
-          --paper: rgba(255, 254, 251, 0.87);
-          --paper-strong: rgba(255, 255, 255, 0.95);
-          --ink: #1f2b3d;
-          --muted: #5f6f86;
-          --line: rgba(46, 68, 97, 0.17);
-          --brand: #0f7f72;
-          --brand-soft: rgba(15, 127, 114, 0.13);
-          --accent: #d1a25a;
-          --danger: #c33a4f;
-          --ok: #0f8f59;
-          --shadow: 0 22px 50px rgba(42, 50, 71, 0.13);
+          --bg: #f3f7fb;
+          --ink: #15233a;
+          --muted: #5f728f;
+          --line: rgba(34, 61, 98, 0.16);
+          --panel: rgba(255, 255, 255, 0.88);
+          --panel-solid: #ffffff;
+          --brand: #0a7a73;
+          --brand-dark: #075f5a;
+          --accent: #c38b3b;
+          --danger: #c43949;
+          --ok: #0e8a56;
+          --shadow: 0 20px 45px rgba(34, 51, 86, 0.12);
         }
 
         * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; }
 
-        html, body {
-          margin: 0;
-          padding: 0;
-        }
-
-        .scene {
+        .app {
           min-height: 100vh;
           padding: 20px;
           background:
-            radial-gradient(900px 420px at -5% -10%, #f2ecd9 0%, transparent 55%),
-            radial-gradient(900px 420px at 105% -10%, #e4f3ef 0%, transparent 52%),
-            var(--bg);
-          color: var(--ink);
-          font-family: 'Outfit', sans-serif;
+            radial-gradient(900px 420px at -10% -10%, #d9e7ff 0%, transparent 55%),
+            radial-gradient(850px 420px at 110% -15%, #ddf1ee 0%, transparent 55%),
+            linear-gradient(170deg, #f6f9fe 0%, #f1f6fb 45%, #f6f8fc 100%);
           position: relative;
           overflow-x: hidden;
+          color: var(--ink);
+          font-family: 'Outfit', sans-serif;
         }
 
-        .scene::before,
-        .scene::after {
+        .app::before,
+        .app::after {
           content: '';
           position: fixed;
           pointer-events: none;
-          border: 1px solid rgba(71, 102, 133, 0.24);
-          background: rgba(255, 255, 255, 0.32);
           z-index: 0;
-          opacity: 0.5;
-          clip-path: polygon(50% 0%, 60% 20%, 82% 18%, 80% 40%, 100% 50%, 80% 60%, 82% 82%, 60% 80%, 50% 100%, 40% 80%, 18% 82%, 20% 60%, 0% 50%, 20% 40%, 18% 18%, 40% 20%);
+          border: 1px solid rgba(71, 99, 139, 0.24);
+          background: rgba(255, 255, 255, 0.34);
+          clip-path: polygon(50% 0%, 62% 20%, 84% 16%, 80% 38%, 100% 50%, 80% 62%, 84% 84%, 62% 80%, 50% 100%, 38% 80%, 16% 84%, 20% 62%, 0% 50%, 20% 38%, 16% 16%, 38% 20%);
+          opacity: 0.42;
         }
 
-        .scene::before {
-          width: 170px;
-          height: 170px;
-          left: -45px;
-          top: 80px;
+        .app::before {
+          width: 180px;
+          height: 180px;
+          left: -48px;
+          top: 72px;
         }
 
-        .scene::after {
-          width: 120px;
-          height: 120px;
-          right: -25px;
-          bottom: 70px;
+        .app::after {
+          width: 130px;
+          height: 130px;
+          right: -28px;
+          bottom: 50px;
         }
 
-        .layout {
+        .container {
           position: relative;
           z-index: 1;
           max-width: 1240px;
@@ -245,10 +241,10 @@ export default function App() {
           gap: 14px;
         }
 
-        .glass {
-          background: var(--paper);
+        .card {
+          background: var(--panel);
           border: 1px solid var(--line);
-          border-radius: 20px;
+          border-radius: 22px;
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
           box-shadow: var(--shadow);
@@ -257,125 +253,123 @@ export default function App() {
         .hero {
           padding: 16px;
           display: grid;
-          grid-template-columns: 1.2fr 0.8fr;
+          grid-template-columns: 1.15fr 0.85fr;
           gap: 12px;
-          align-items: stretch;
         }
 
-        .title-card {
+        .hero-main {
           border: 1px solid var(--line);
-          border-radius: 15px;
-          background: var(--paper-strong);
+          border-radius: 16px;
+          background: var(--panel-solid);
           padding: 14px;
           display: grid;
           gap: 10px;
-          align-content: start;
         }
 
-        .eyebrow {
-          font-size: 11px;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.8px;
-          color: var(--muted);
-        }
-
-        .main-title {
+        .kicker {
           margin: 0;
-          font-family: 'DM Serif Display', serif;
-          font-size: clamp(34px, 5vw, 60px);
+          font-size: 11px;
+          letter-spacing: 0.7px;
+          text-transform: uppercase;
+          color: var(--muted);
+          font-weight: 700;
+        }
+
+        .title {
+          margin: 0;
+          font-family: 'Fraunces', serif;
+          font-size: clamp(34px, 4.8vw, 60px);
           line-height: 0.95;
           letter-spacing: 0.2px;
-          color: var(--ink);
         }
 
-        .main-sub {
+        .lead {
           margin: 0;
-          font-size: 14px;
           color: var(--muted);
+          font-size: 14px;
           font-weight: 500;
-          max-width: 50ch;
+          max-width: 58ch;
         }
 
-        .clock-strip {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
+        .hero-meta {
           border-top: 1px solid var(--line);
           padding-top: 10px;
+          display: flex;
+          align-items: end;
+          justify-content: space-between;
+          gap: 10px;
         }
 
-        .clock-now {
-          font-size: clamp(24px, 3.4vw, 38px);
+        .clock {
+          font-size: clamp(26px, 3.4vw, 40px);
           line-height: 1;
-          font-weight: 700;
+          font-weight: 800;
           color: var(--ink);
           font-variant-numeric: tabular-nums;
         }
 
-        .clock-date {
+        .date {
           text-align: right;
           font-size: 12px;
           font-weight: 600;
           color: var(--muted);
         }
 
-        .hero-note {
-          border-radius: 15px;
-          border: 1px solid rgba(13, 93, 83, 0.27);
-          background: linear-gradient(145deg, #f6fffd, #eefaf7);
+        .hero-side {
+          border-radius: 16px;
+          border: 1px solid rgba(10, 122, 115, 0.26);
+          background: linear-gradient(145deg, #f4fffd, #eaf8f6);
           padding: 14px;
           display: grid;
           align-content: center;
           gap: 8px;
         }
 
-        .note-title {
+        .hero-side h3 {
           margin: 0;
           font-size: 12px;
           text-transform: uppercase;
-          letter-spacing: 0.6px;
-          color: #2b6f66;
+          letter-spacing: 0.7px;
+          color: #2f716b;
           font-weight: 700;
         }
 
-        .note-text {
+        .hero-side p {
           margin: 0;
-          font-size: clamp(20px, 2.6vw, 32px);
+          font-family: 'Fraunces', serif;
+          font-size: clamp(22px, 2.8vw, 34px);
           line-height: 1.2;
-          font-family: 'DM Serif Display', serif;
-          color: #1f4b45;
+          color: #1f4f4b;
         }
 
-        .note-small {
-          margin: 0;
+        .hero-side small {
+          color: #4a7571;
           font-size: 13px;
-          color: #406e69;
+          font-weight: 500;
         }
 
         .countdown {
           padding: 12px;
           display: grid;
-          gap: 10px;
           grid-template-columns: auto 1fr;
+          gap: 12px;
           align-items: center;
         }
 
-        .count-label {
+        .countdown-label {
           font-size: 13px;
-          color: var(--muted);
           font-weight: 600;
+          color: var(--muted);
           white-space: nowrap;
         }
 
-        .count-grid {
+        .countdown-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 8px;
         }
 
-        .box {
+        .count-box {
           border-radius: 12px;
           border: 1px solid var(--line);
           background: #fff;
@@ -383,20 +377,20 @@ export default function App() {
           padding: 8px 4px;
         }
 
-        .box-value {
-          font-size: clamp(22px, 3vw, 32px);
+        .count-value {
+          font-size: clamp(24px, 3vw, 34px);
           line-height: 1;
-          font-weight: 700;
+          font-weight: 800;
           font-variant-numeric: tabular-nums;
         }
 
-        .box-name {
+        .count-name {
+          margin-top: 3px;
           font-size: 10px;
-          margin-top: 4px;
-          color: var(--muted);
           letter-spacing: 0.5px;
+          color: var(--muted);
+          font-weight: 700;
           text-transform: uppercase;
-          font-weight: 600;
         }
 
         .body {
@@ -406,7 +400,7 @@ export default function App() {
           align-items: start;
         }
 
-        .compose {
+        .composer {
           padding: 16px;
           position: sticky;
           top: 14px;
@@ -414,40 +408,38 @@ export default function App() {
 
         .section-title {
           margin: 0;
-          font-family: 'DM Serif Display', serif;
-          font-size: 34px;
+          font-family: 'Fraunces', serif;
+          font-size: 36px;
           line-height: 1;
         }
 
         .section-sub {
-          margin: 7px 0 14px;
-          color: var(--muted);
+          margin: 8px 0 14px;
           font-size: 13px;
+          color: var(--muted);
           font-weight: 500;
         }
 
-        .field {
-          margin-bottom: 10px;
-        }
+        .field { margin-bottom: 10px; }
 
         .label {
           display: block;
           margin-bottom: 6px;
           font-size: 12px;
-          color: #4e5f79;
-          letter-spacing: 0.2px;
-          font-weight: 600;
+          color: #4d607d;
+          font-weight: 700;
+          letter-spacing: 0.15px;
         }
 
         .input,
         .textarea {
           width: 100%;
+          border-radius: 12px;
+          border: 1px solid var(--line);
+          background: #fff;
+          color: var(--ink);
           font: inherit;
           font-weight: 500;
-          color: var(--ink);
-          border: 1px solid var(--line);
-          border-radius: 12px;
-          background: #fff;
           padding: 11px 12px;
           outline: none;
           transition: border-color .15s ease, box-shadow .15s ease;
@@ -455,8 +447,8 @@ export default function App() {
 
         .input:focus,
         .textarea:focus {
-          border-color: rgba(15, 127, 114, 0.45);
-          box-shadow: 0 0 0 3px rgba(15, 127, 114, 0.14);
+          border-color: rgba(10, 122, 115, 0.45);
+          box-shadow: 0 0 0 3px rgba(10, 122, 115, 0.14);
         }
 
         .textarea {
@@ -469,7 +461,7 @@ export default function App() {
           border: 0;
           border-radius: 12px;
           padding: 12px;
-          background: linear-gradient(135deg, #0f7f72, #2ca392);
+          background: linear-gradient(135deg, var(--brand), #26a293);
           color: #fff;
           font-weight: 700;
           font-size: 14px;
@@ -480,11 +472,11 @@ export default function App() {
 
         .submit:hover {
           transform: translateY(-1px);
-          box-shadow: 0 12px 22px rgba(12, 116, 104, 0.26);
+          box-shadow: 0 12px 22px rgba(10, 122, 115, 0.26);
         }
 
         .submit:disabled {
-          opacity: 0.7;
+          opacity: 0.72;
           cursor: not-allowed;
           transform: none;
           box-shadow: none;
@@ -499,15 +491,15 @@ export default function App() {
         .message.error { color: var(--danger); }
         .message.success { color: var(--ok); }
 
-        .tip {
+        .note {
           margin-top: 11px;
-          border: 1px solid var(--line);
           border-radius: 12px;
-          background: var(--brand-soft);
-          padding: 9px 10px;
-          color: #295f57;
+          border: 1px solid var(--line);
+          background: rgba(195, 139, 59, 0.09);
+          color: #70562d;
           font-size: 12px;
           font-weight: 600;
+          padding: 9px 10px;
         }
 
         .feed {
@@ -519,8 +511,8 @@ export default function App() {
           display: grid;
           grid-template-columns: 1fr auto;
           gap: 10px;
-          align-items: start;
           margin-bottom: 10px;
+          align-items: start;
         }
 
         .feed-count {
@@ -538,19 +530,19 @@ export default function App() {
           max-width: 58%;
         }
 
-        .leader-pill {
-          background: #fff;
-          border: 1px solid var(--line);
+        .leader {
           border-radius: 999px;
+          border: 1px solid var(--line);
+          background: #fff;
           padding: 6px 10px;
           font-size: 12px;
-          color: #51617a;
-          font-weight: 600;
+          font-weight: 700;
+          color: #566a86;
           white-space: nowrap;
         }
 
-        .leader-pill strong {
-          color: #0f7f72;
+        .leader strong {
+          color: var(--brand-dark);
           margin-left: 5px;
         }
 
@@ -561,21 +553,15 @@ export default function App() {
           padding-right: 2px;
         }
 
-        .item {
+        .entry {
           display: grid;
           grid-template-columns: 1fr auto;
           gap: 12px;
           padding: 11px 2px;
           border-bottom: 1px solid var(--line);
-          animation: fadeIn .28s ease;
         }
 
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(5px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .item-main {
+        .entry-main {
           display: flex;
           gap: 10px;
           min-width: 0;
@@ -584,35 +570,35 @@ export default function App() {
         .avatar {
           width: 36px;
           height: 36px;
+          flex: 0 0 auto;
           border-radius: 50%;
-          background: linear-gradient(150deg, #e8f8f5, #d3eeea);
-          border: 1px solid rgba(15, 127, 114, 0.3);
-          display: grid;
-          place-items: center;
-          color: #0f6f64;
+          border: 1px solid rgba(10, 122, 115, 0.3);
+          background: linear-gradient(150deg, #e8f8f5, #d5eee9);
+          color: var(--brand-dark);
           font-size: 12px;
           font-weight: 700;
-          flex-shrink: 0;
+          display: grid;
+          place-items: center;
         }
 
         .name {
           font-size: 14px;
           font-weight: 700;
-          color: #21324a;
+          color: var(--ink);
         }
 
         .text {
           margin-top: 3px;
           font-size: 14px;
-          color: #3a4d66;
+          color: #3d516c;
           line-height: 1.45;
           word-break: break-word;
         }
 
         .ago {
           font-size: 12px;
-          color: var(--muted);
           font-weight: 600;
+          color: var(--muted);
           white-space: nowrap;
           padding-top: 2px;
         }
@@ -637,12 +623,12 @@ export default function App() {
             grid-template-columns: 1fr;
           }
 
-          .compose {
+          .composer {
             position: static;
           }
 
           .leaders {
-            max-width: none;
+            max-width: 100%;
             justify-content: flex-start;
           }
 
@@ -652,47 +638,47 @@ export default function App() {
         }
       `}</style>
 
-      <div className="layout">
-        <section className="hero glass">
-          <article className="title-card">
-            <div className="eyebrow">Topluluk Panosu</div>
-            <h1 className="main-title">Iyilik Hareketi</h1>
-            <p className="main-sub">Herkesin gorebildigi, gercek iyiliklerden olusan ortak bir akisa hos geldin.</p>
+      <div className="container">
+        <header className="card hero">
+          <div className="hero-main">
+            <p className="kicker">Ramazan Iyilik Platformu</p>
+            <h1 className="title">Iyilik Hareketi</h1>
+            <p className="lead">Yapilan iyilikleri gorunur hale getirip daha fazla kisinin harekete gecmesini saglayan ortak topluluk akisi.</p>
 
-            <div className="clock-strip">
-              <div className="clock-now">{formatClock(now)}</div>
-              <div className="clock-date">{formatDate(now)}</div>
+            <div className="hero-meta">
+              <div className="clock">{formatClock(now)}</div>
+              <div className="date">{formatDate(now)}</div>
             </div>
-          </article>
+          </div>
 
-          <aside className="hero-note">
-            <h2 className="note-title">Bugunun Niyeti</h2>
-            <p className="note-text">Iyilik gorundukce buyur.</p>
-            <p className="note-small">Kisa bir not birak, bir baskasina ilham olsun.</p>
+          <aside className="hero-side">
+            <h3>Bugunun Niyeti</h3>
+            <p>Iyilik yayildikca guclenir.</p>
+            <small>Kisa bir iyi ornek, bir baskasinin gununu degistirebilir.</small>
           </aside>
-        </section>
+        </header>
 
-        <section className="countdown glass">
-          <div className="count-label">
+        <section className="card countdown">
+          <div className="countdown-label">
             {countdown?.done
               ? 'Ramazan basladi. Hayirli Ramazanlar.'
               : `Ramazan'a kalan sure (${targetDate ? targetDate.toLocaleDateString('tr-TR') : '-'})`}
           </div>
 
           {!countdown?.done && countdown && (
-            <div className="count-grid">
-              <div className="box"><div className="box-value">{String(countdown.d).padStart(2, '0')}</div><div className="box-name">Gun</div></div>
-              <div className="box"><div className="box-value">{String(countdown.h).padStart(2, '0')}</div><div className="box-name">Saat</div></div>
-              <div className="box"><div className="box-value">{String(countdown.m).padStart(2, '0')}</div><div className="box-name">Dakika</div></div>
-              <div className="box"><div className="box-value">{String(countdown.s).padStart(2, '0')}</div><div className="box-name">Saniye</div></div>
+            <div className="countdown-grid">
+              <div className="count-box"><div className="count-value">{String(countdown.d).padStart(2, '0')}</div><div className="count-name">Gun</div></div>
+              <div className="count-box"><div className="count-value">{String(countdown.h).padStart(2, '0')}</div><div className="count-name">Saat</div></div>
+              <div className="count-box"><div className="count-value">{String(countdown.m).padStart(2, '0')}</div><div className="count-name">Dakika</div></div>
+              <div className="count-box"><div className="count-value">{String(countdown.s).padStart(2, '0')}</div><div className="count-name">Saniye</div></div>
             </div>
           )}
         </section>
 
         <main className="body">
-          <section className="compose glass">
+          <section className="card composer">
             <h2 className="section-title">Iyilik Ekle</h2>
-            <p className="section-sub">Bugun ne yaptigini net ve kisa yaz.</p>
+            <p className="section-sub">Bugun yaptigin iyiligi kisa ve net yaz.</p>
 
             <form onSubmit={submit}>
               <div className="field">
@@ -722,11 +708,11 @@ export default function App() {
                   value={form.iyilik}
                   onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
                   maxLength={CONFIG.MAX_IYILIK_LENGTH}
-                  placeholder="Ornek: Yasli komsuma alisveriste yardim ettim"
+                  placeholder="Ornek: Yasli komsuma market alisverisinde yardim ettim"
                 />
               </div>
 
-              <button type="submit" className="submit" disabled={submitting}>
+              <button className="submit" type="submit" disabled={submitting}>
                 {submitting ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
 
@@ -734,10 +720,10 @@ export default function App() {
               {success ? <div className="message success">{success}</div> : null}
             </form>
 
-            <div className="tip">Not: Uygunsuz metinler filtrelenir, tekrar eden gonderiler engellenir.</div>
+            <div className="note">Not: Uygunsuz icerik filtrelenir. Tekrarlayan spam mesajlar kabul edilmez.</div>
           </section>
 
-          <section className="feed glass">
+          <section className="card feed">
             <div className="feed-head">
               <div>
                 <h2 className="section-title">Iyilik Akisi</h2>
@@ -746,7 +732,7 @@ export default function App() {
 
               <div className="leaders">
                 {leaderboard.map((person, i) => (
-                  <div className="leader-pill" key={person.name}>
+                  <div className="leader" key={person.name}>
                     {i + 1}. {person.name}
                     <strong>{person.count}</strong>
                   </div>
@@ -761,8 +747,8 @@ export default function App() {
                 <div className="empty">Henuz kayit yok. Ilk iyiligi sen ekle.</div>
               ) : (
                 items.map((item) => (
-                  <article className="item" key={item.id}>
-                    <div className="item-main">
+                  <article className="entry" key={item.id}>
+                    <div className="entry-main">
                       <div className="avatar">{getInitials(item.isim, item.soyisim)}</div>
                       <div>
                         <div className="name">{item.isim} {item.soyisim}</div>
