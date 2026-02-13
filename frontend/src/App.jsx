@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CONFIG } from './config';
 
 function getCountdownParts(targetDate) {
@@ -1473,6 +1473,37 @@ function RamazanPremiumUIInner() {
                   <span className="stat-label">Katılımcı</span>
                   <strong className="stat-value">{istatistikler.katilimciSayisi}</strong>
                 </div>
+              </div>
+            </section>
+
+            {/* Sosyal Medya Paylaşım */}
+            <section className="glass-card share-card" style={{ gridColumn: 'span 4' }}>
+              <h3 className="section-title mini">Paylaş</h3>
+              <p style={{ fontSize: '13px', color: '#8ea0be', marginBottom: '16px' }}>
+                İyilik hareketini yay, başkalarına ilham ver!
+              </p>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Ramazan\'da iyilik hareketi başlattım! Sen de katıl 🌙')}&url=${encodeURIComponent('https://iyilikhareketi.online')}`, '_blank')}
+                  className="btn"
+                  style={{ flex: 1, minWidth: '100px', background: '#1DA1F2', color: '#fff' }}
+                >
+                  𝕏 Twitter
+                </button>
+                <button
+                  onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent('Ramazan\'da iyilik hareketi başlattım! Sen de katıl 🌙 https://iyilikhareketi.online')}`, '_blank')}
+                  className="btn"
+                  style={{ flex: 1, minWidth: '100px', background: '#fff' }}
+                >
+                  WhatsApp
+                </button>
+                <button
+                  onClick={() => navigator.clipboard.writeText('https://iyilikhareketi.online').then(() => alert('Link kopyalandı!'))}
+                  className="btn"
+                  style={{ flex: 1, minWidth: '100px' }}
+                >
+                  🔗 Kopyala
+                </button>
               </div>
             </section>
           </div>
