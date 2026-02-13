@@ -1,0 +1,8 @@
+name = "iyilik-api"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+# Environment variables (secrets ile eklenecek):
+# - UPSTASH_REDIS_REST_URL
+# - UPSTASH_REDIS_REST_TOKEN  
+# - ANTHROPIC_API_KEY (opsiyonel)
