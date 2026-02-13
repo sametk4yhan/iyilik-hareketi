@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { CONFIG } from './config';
 
 function getCountdownParts(targetDate) {
@@ -66,6 +66,88 @@ function getInitials(isim, soyisim) {
   return v || "IH";
 }
 
+// Confetti component
+function Confetti({ active }) {
+  if (!active) return null;
+  
+  const colors = ['#f5e6a3', '#d4af37', '#29d391', '#3b82f6', '#f59e0b'];
+  const pieces = Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 100,
+    delay: Math.random() * 0.5,
+    duration: 2 + Math.random() * 2,
+    color: colors[Math.floor(Math.random() * colors.length)],
+    size: 6 + Math.random() * 8,
+  }));
+
+  return (
+    <div className="confetti-container">
+      {pieces.map((p) => (
+        <div
+          key={p.id}
+          className="confetti-piece"
+          style={{
+            left: `${p.left}%`,
+            animationDelay: `${p.delay}s`,
+            animationDuration: `${p.duration}s`,
+            backgroundColor: p.color,
+            width: p.size,
+            height: p.size,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Stars background component
+function StarsBackground() {
+  const stars = useMemo(() => 
+    Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 100,
+      size: 1 + Math.random() * 2,
+      delay: Math.random() * 3,
+      duration: 2 + Math.random() * 3,
+    })), []
+  );
+
+  return (
+    <div className="stars-container">
+      {stars.map((star) => (
+        <div
+          key={star.id}
+          className="star"
+          style={{
+            left: `${star.left}%`,
+            top: `${star.top}%`,
+            width: star.size,
+            height: star.size,
+            animationDelay: `${star.delay}s`,
+            animationDuration: `${star.duration}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Skeleton loader component
+function SkeletonItem() {
+  return (
+    <div className="item skeleton-item">
+      <div className="item-left">
+        <div className="avatar skeleton-avatar" />
+        <div>
+          <div className="skeleton-line skeleton-name" />
+          <div className="skeleton-line skeleton-text" />
+        </div>
+      </div>
+      <div className="skeleton-line skeleton-time" />
+    </div>
+  );
+}
 
 function AdminPanel({
   token,
@@ -160,16 +242,34 @@ function RamazanPremiumUIInner() {
   const [form, setForm] = useState({ isim: '', soyisim: '', iyilik: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-const [error, setError] = useState('');
-const [success, setSuccess] = useState('');
-const [gununNiyeti, setGununNiyeti] = useState({
-  metin: 'Her iyilik yeni bir iyiliğin kapısını açar.',
-  kaynak: 'Ramazan Ruhu',
-});
-const [adminToken, setAdminToken] = useState('');
-const [adminStatus, setAdminStatus] = useState({ type: '', message: '' });
-const [pendingItems, setPendingItems] = useState([]);
-const [adminLoading, setAdminLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [newItemId, setNewItemId] = useState(null);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [gununNiyeti, setGununNiyeti] = useState({
+    metin: 'Her iyilik yeni bir iyiliğin kapısını açar.',
+    kaynak: 'Ramazan Ruhu',
+  });
+  const [adminToken, setAdminToken] = useState('');
+  const [adminStatus, setAdminStatus] = useState({ type: '', message: '' });
+  const [pendingItems, setPendingItems] = useState([]);
+  const [adminLoading, setAdminLoading] = useState(false);
+
+  // Gece/gündüz teması
+  const isDayTime = useMemo(() => {
+    const hour = time.getHours();
+    return hour >= 6 && hour < 18;
+  }, [time]);
+
+  // Scroll listener for header shrink
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const fetchIyilikler = useCallback(async () => {
     try {
@@ -198,203 +298,201 @@ const [adminLoading, setAdminLoading] = useState(false);
     return () => clearInterval(poll);
   }, [fetchIyilikler]);
 
-useEffect(() => {
-  const timer = setInterval(() => {
-    setTime(new Date());
-    setCountdown(getCountdownParts(targetDate));
-  }, 1000);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTime(new Date());
+      setCountdown(getCountdownParts(targetDate));
+    }, 1000);
 
-  return () => clearInterval(timer);
-}, [targetDate]);
+    return () => clearInterval(timer);
+  }, [targetDate]);
 
-useEffect(() => {
-  let active = true;
+  useEffect(() => {
+    let active = true;
 
-  const fetchGununNiyeti = async () => {
+    const fetchGununNiyeti = async () => {
+      try {
+        const response = await fetch(`${CONFIG.WORKER_URL}/gunun-niyeti`);
+        const data = await response.json();
+
+        if (!response.ok || !data?.success || !data?.data?.metin) return;
+        if (!active) return;
+
+        setGununNiyeti({
+          metin: data.data.metin,
+          kaynak: data.data.kaynak || 'Ramazan Ruhu',
+        });
+      } catch {
+        // Sessiz fallback: kartta varsayilan metin kalir.
+      }
+    };
+
+    fetchGununNiyeti();
+    const niyetTimer = setInterval(fetchGununNiyeti, 60 * 60 * 1000);
+
+    return () => {
+      active = false;
+      clearInterval(niyetTimer);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = window.localStorage.getItem('ih_admin_token');
+    if (stored) setAdminToken(stored);
+  }, []);
+
+  const fetchPending = useCallback(async () => {
+    if (!adminToken) return;
+    setAdminLoading(true);
+    setAdminStatus({ type: '', message: '' });
+
     try {
-      const response = await fetch(`${CONFIG.WORKER_URL}/gunun-niyeti`);
+      const response = await fetch(`${CONFIG.WORKER_URL}/pending`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       const data = await response.json();
 
-      if (!response.ok || !data?.success || !data?.data?.metin) return;
-      if (!active) return;
+      if (!response.ok || !data.success) {
+        throw new Error(data?.error || 'Yetkisiz erişim.');
+      }
 
-      setGununNiyeti({
-        metin: data.data.metin,
-        kaynak: data.data.kaynak || 'Ramazan Ruhu',
+      setPendingItems(data.data || []);
+    } catch (err) {
+      setAdminStatus({ type: 'error', message: err.message || 'Admin panel hatası.' });
+    } finally {
+      setAdminLoading(false);
+    }
+  }, [adminToken]);
+
+  useEffect(() => {
+    const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    if (isAdmin && adminToken) {
+      fetchPending();
+    }
+  }, [adminToken, fetchPending]);
+
+  const saveAdminToken = () => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('ih_admin_token', adminToken);
+    }
+    setAdminStatus({ type: 'ok', message: 'Token kaydedildi.' });
+  };
+
+  const approvePending = async (id) => {
+    if (!adminToken) return;
+    setAdminLoading(true);
+    try {
+      const response = await fetch(`${CONFIG.WORKER_URL}/pending/approve`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ id }),
       });
-    } catch {
-      // Sessiz fallback: kartta varsayilan metin kalir.
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data?.error || 'Onay başarısız.');
+      }
+      setAdminStatus({ type: 'ok', message: 'Kayıt onaylandı.' });
+      await fetchPending();
+    } catch (err) {
+      setAdminStatus({ type: 'error', message: err.message || 'Onay hatası.' });
+    } finally {
+      setAdminLoading(false);
     }
   };
 
-  fetchGununNiyeti();
-  const niyetTimer = setInterval(fetchGununNiyeti, 60 * 60 * 1000);
-
-  return () => {
-    active = false;
-    clearInterval(niyetTimer);
+  const rejectPending = async (id) => {
+    if (!adminToken) return;
+    setAdminLoading(true);
+    try {
+      const response = await fetch(`${CONFIG.WORKER_URL}/pending/reject`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ id }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data?.error || 'Reddetme başarısız.');
+      }
+      setAdminStatus({ type: 'ok', message: 'Kayıt reddedildi.' });
+      await fetchPending();
+    } catch (err) {
+      setAdminStatus({ type: 'error', message: err.message || 'Reddetme hatası.' });
+    } finally {
+      setAdminLoading(false);
+    }
   };
-}, []);
 
-useEffect(() => {
-  if (typeof window === 'undefined') return;
-  const stored = window.localStorage.getItem('ih_admin_token');
-  if (stored) setAdminToken(stored);
-}, []);
+  const countdownCells = useMemo(
+    () => [
+      { label: 'GÜN', val: String(countdown.d).padStart(2, '0') },
+      { label: 'SAAT', val: String(countdown.h).padStart(2, '0') },
+      { label: 'DAKİKA', val: String(countdown.m).padStart(2, '0') },
+      { label: 'SANİYE', val: String(countdown.s).padStart(2, '0') },
+    ],
+    [countdown]
+  );
 
-const fetchPending = useCallback(async () => {
-  if (!adminToken) return;
-  setAdminLoading(true);
-  setAdminStatus({ type: '', message: '' });
+  const leaderboard = useMemo(() => {
+    const sayac = new Map();
 
-  try {
-    const response = await fetch(`${CONFIG.WORKER_URL}/pending`, {
-      headers: { Authorization: `Bearer ${adminToken}` },
+    iyilikler.forEach((item) => {
+      const adSoyad = `${item.isim || ''} ${item.soyisim || ''}`.trim() || 'Anonim';
+      sayac.set(adSoyad, (sayac.get(adSoyad) || 0) + 1);
     });
-    const data = await response.json();
 
-    if (!response.ok || !data.success) {
-      throw new Error(data?.error || 'Yetkisiz erişim.');
-    }
+    return [...sayac.entries()]
+      .map(([isim, adet]) => ({ isim, adet }))
+      .sort((a, b) => b.adet - a.adet || a.isim.localeCompare(b.isim, 'tr'))
+      .slice(0, 5);
+  }, [iyilikler]);
 
-    setPendingItems(data.data || []);
-  } catch (err) {
-    setAdminStatus({ type: 'error', message: err.message || 'Admin panel hatası.' });
-  } finally {
-    setAdminLoading(false);
-  }
-}, [adminToken]);
+  const istatistikler = useMemo(() => {
+    const now = new Date();
+    const ayniGunMu = (a, b) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
 
-useEffect(() => {
-  const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
-  if (isAdmin && adminToken) {
-    fetchPending();
-  }
-}, [adminToken, fetchPending]);
+    const haftaBaslangici = new Date(now);
+    haftaBaslangici.setHours(0, 0, 0, 0);
+    haftaBaslangici.setDate(haftaBaslangici.getDate() - 6);
 
-const saveAdminToken = () => {
-  if (typeof window !== 'undefined') {
-    window.localStorage.setItem('ih_admin_token', adminToken);
-  }
-  setAdminStatus({ type: 'ok', message: 'Token kaydedildi.' });
-};
+    let bugunEklenen = 0;
+    let haftalikEklenen = 0;
+    const katilimciSeti = new Set();
 
-const approvePending = async (id) => {
-  if (!adminToken) return;
-  setAdminLoading(true);
-  try {
-    const response = await fetch(`${CONFIG.WORKER_URL}/pending/approve`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
-      },
-      body: JSON.stringify({ id }),
+    iyilikler.forEach((item) => {
+      const tarih = toSafeDate(item.tarih);
+      const adSoyad = `${item.isim || ''} ${item.soyisim || ''}`.trim() || 'Anonim';
+      katilimciSeti.add(adSoyad);
+
+      if (tarih && ayniGunMu(tarih, now)) {
+        bugunEklenen += 1;
+      }
+
+      if (tarih && tarih >= haftaBaslangici) {
+        haftalikEklenen += 1;
+      }
     });
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-      throw new Error(data?.error || 'Onay başarısız.');
-    }
-    setAdminStatus({ type: 'ok', message: 'Kayıt onaylandı.' });
-    await fetchPending();
-  } catch (err) {
-    setAdminStatus({ type: 'error', message: err.message || 'Onay hatası.' });
-  } finally {
-    setAdminLoading(false);
-  }
-};
 
-const rejectPending = async (id) => {
-  if (!adminToken) return;
-  setAdminLoading(true);
-  try {
-    const response = await fetch(`${CONFIG.WORKER_URL}/pending/reject`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${adminToken}`,
-      },
-      body: JSON.stringify({ id }),
-    });
-    const data = await response.json();
-    if (!response.ok || !data.success) {
-      throw new Error(data?.error || 'Reddetme başarısız.');
-    }
-    setAdminStatus({ type: 'ok', message: 'Kayıt reddedildi.' });
-    await fetchPending();
-  } catch (err) {
-    setAdminStatus({ type: 'error', message: err.message || 'Reddetme hatası.' });
-  } finally {
-    setAdminLoading(false);
-  }
-};
+    return {
+      bugunEklenen,
+      toplamIyilik: iyilikler.length,
+      haftalikEklenen,
+      katilimciSayisi: katilimciSeti.size,
+    };
+  }, [iyilikler]);
 
+  const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
 
-const countdownCells = useMemo(
-  () => [
-    { label: 'GÜN', val: String(countdown.d).padStart(2, '0') },
-    { label: 'SAAT', val: String(countdown.h).padStart(2, '0') },
-    { label: 'DAKİKA', val: String(countdown.m).padStart(2, '0') },
-    { label: 'SANİYE', val: String(countdown.s).padStart(2, '0') },
-  ],
-  [countdown]
-);
-
-const leaderboard = useMemo(() => {
-  const sayac = new Map();
-
-  iyilikler.forEach((item) => {
-    const adSoyad = `${item.isim || ''} ${item.soyisim || ''}`.trim() || 'Anonim';
-    sayac.set(adSoyad, (sayac.get(adSoyad) || 0) + 1);
-  });
-
-  return [...sayac.entries()]
-    .map(([isim, adet]) => ({ isim, adet }))
-    .sort((a, b) => b.adet - a.adet || a.isim.localeCompare(b.isim, 'tr'))
-    .slice(0, 5);
-}, [iyilikler]);
-
-const istatistikler = useMemo(() => {
-  const now = new Date();
-  const ayniGunMu = (a, b) =>
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-
-  const haftaBaslangici = new Date(now);
-  haftaBaslangici.setHours(0, 0, 0, 0);
-  haftaBaslangici.setDate(haftaBaslangici.getDate() - 6);
-
-  let bugunEklenen = 0;
-  let haftalikEklenen = 0;
-  const katilimciSeti = new Set();
-
-  iyilikler.forEach((item) => {
-    const tarih = toSafeDate(item.tarih);
-    const adSoyad = `${item.isim || ''} ${item.soyisim || ''}`.trim() || 'Anonim';
-    katilimciSeti.add(adSoyad);
-
-    if (tarih && ayniGunMu(tarih, now)) {
-      bugunEklenen += 1;
-    }
-
-    if (tarih && tarih >= haftaBaslangici) {
-      haftalikEklenen += 1;
-    }
-  });
-
-  return {
-    bugunEklenen,
-    toplamIyilik: iyilikler.length,
-    haftalikEklenen,
-    katilimciSayisi: katilimciSeti.size,
-  };
-}, [iyilikler]);
-
-const isAdminRoute = typeof window !== 'undefined' && (window.location.pathname.startsWith('/admin') || new URLSearchParams(window.location.search).get('admin') === '1');
-
-const submit = async (e) => {
-
+  const submit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -431,7 +529,20 @@ const submit = async (e) => {
 
       setForm({ isim: '', soyisim: '', iyilik: '' });
       setSuccess(data.pending ? 'İçerik onaya gönderildi.' : 'İyilik kaydedildi.');
+      
+      // Confetti göster
+      if (!data.pending) {
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 3000);
+      }
+      
       await fetchIyilikler();
+      
+      // Yeni eklenen item'a glow efekti için
+      if (!data.pending && iyilikler.length > 0) {
+        setNewItemId(Date.now());
+        setTimeout(() => setNewItemId(null), 3000);
+      }
     } catch (e) {
       setError(e.message || 'Bağlantı hatası.');
     } finally {
@@ -440,12 +551,13 @@ const submit = async (e) => {
   };
 
   return (
-    <div className="ramazan-ui">
+    <div className={`ramazan-ui ${isDayTime ? 'day-theme' : 'night-theme'}`}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
 
         :root {
           --bg: #020617;
+          --bg-day: #0a1628;
           --card: rgba(255, 255, 255, 0.03);
           --line: rgba(255, 255, 255, 0.08);
           --text: #d6deef;
@@ -468,10 +580,62 @@ const submit = async (e) => {
           position: relative;
           overflow-x: hidden;
           padding: 48px 24px;
+          transition: background 0.5s ease;
+        }
+
+        .ramazan-ui.day-theme {
+          background: var(--bg-day);
         }
 
         .ramazan-ui::selection {
           background: rgba(212, 175, 55, 0.3);
+        }
+
+        /* Stars background */
+        .stars-container {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        .star {
+          position: absolute;
+          background: rgba(255, 255, 255, 0.8);
+          border-radius: 50%;
+          animation: twinkle ease-in-out infinite;
+        }
+
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.2; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.3); }
+        }
+
+        /* Confetti */
+        .confetti-container {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 1000;
+          overflow: hidden;
+        }
+
+        .confetti-piece {
+          position: absolute;
+          top: -20px;
+          border-radius: 2px;
+          animation: confetti-fall linear forwards;
+        }
+
+        @keyframes confetti-fall {
+          0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+          }
         }
 
         .orb {
@@ -480,6 +644,7 @@ const submit = async (e) => {
           filter: blur(80px);
           z-index: 0;
           pointer-events: none;
+          transition: all 0.5s ease;
         }
 
         .orb-a {
@@ -488,6 +653,10 @@ const submit = async (e) => {
           background: rgba(30, 58, 138, 0.2);
           top: -80px;
           left: -80px;
+        }
+
+        .day-theme .orb-a {
+          background: rgba(30, 58, 138, 0.3);
         }
 
         .orb-b {
@@ -512,6 +681,19 @@ const submit = async (e) => {
           gap: 32px;
           margin-bottom: 42px;
           flex-wrap: wrap;
+          transition: all 0.3s ease;
+        }
+
+        .topbar.scrolled {
+          margin-bottom: 24px;
+        }
+
+        .topbar.scrolled .title {
+          font-size: clamp(28px, 4vw, 48px);
+        }
+
+        .topbar.scrolled .clock {
+          font-size: clamp(24px, 3vw, 36px);
         }
 
         .title {
@@ -520,6 +702,7 @@ const submit = async (e) => {
           font-weight: 800;
           margin: 0 0 10px;
           letter-spacing: -0.02em;
+          transition: font-size 0.3s ease;
         }
 
         .gold {
@@ -547,6 +730,7 @@ const submit = async (e) => {
           letter-spacing: -0.03em;
           color: rgba(255,255,255,0.92);
           line-height: 1;
+          transition: font-size 0.3s ease;
         }
 
         .date {
@@ -579,13 +763,12 @@ const submit = async (e) => {
           transform: translateY(-4px);
         }
 
-.countdown { grid-column: span 8; }
-.niyet { grid-column: span 4; }
-.form-card { grid-column: span 4; }
-.flow-card { grid-column: span 8; }
-.leaderboard-card { grid-column: span 4; }
-.stats-card { grid-column: span 8; }
-
+        .countdown { grid-column: span 8; }
+        .niyet { grid-column: span 4; }
+        .form-card { grid-column: span 4; }
+        .flow-card { grid-column: span 8; }
+        .leaderboard-card { grid-column: span 4; }
+        .stats-card { grid-column: span 8; }
 
         .label-row {
           display: flex;
@@ -630,10 +813,17 @@ const submit = async (e) => {
           font-weight: 700;
         }
 
+        /* Niyet card - fixed hover */
         .niyet {
           background: linear-gradient(140deg, #d6ab51, #a57422);
           color: #1f1b12;
           box-shadow: 0 20px 35px rgba(110, 71, 13, 0.32);
+          transform: none !important;
+        }
+
+        .niyet:hover {
+          background: linear-gradient(140deg, #e0b85a, #b07f28);
+          transform: none !important;
         }
 
         .niyet h3 {
@@ -682,6 +872,7 @@ const submit = async (e) => {
           gap: 12px;
         }
 
+        /* Form input focus animations */
         .input,
         .textarea {
           width: 100%;
@@ -693,7 +884,7 @@ const submit = async (e) => {
           font-size: 14px;
           padding: 14px 16px;
           outline: none;
-          transition: border-color .2s ease;
+          transition: all 0.3s ease;
         }
 
         .input::placeholder,
@@ -701,11 +892,15 @@ const submit = async (e) => {
 
         .input:focus,
         .textarea:focus {
-          border-color: rgba(212, 175, 55, 0.45);
+          border-color: var(--gold-2);
+          box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15), 0 0 20px rgba(212, 175, 55, 0.1);
+          background: rgba(255,255,255,0.08);
+          transform: translateY(-2px);
         }
 
         .textarea { resize: none; min-height: 110px; }
 
+        /* Button with loading spinner */
         .btn {
           width: 100%;
           border: 0;
@@ -716,11 +911,29 @@ const submit = async (e) => {
           font-size: 14px;
           font-weight: 800;
           cursor: pointer;
-          transition: background .2s ease;
+          transition: all 0.3s ease;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
         }
 
-        .btn:hover { background: #f4d27a; }
-        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        .btn:hover { background: #f4d27a; transform: translateY(-2px); }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; transform: none; }
+
+        .btn-spinner {
+          width: 18px;
+          height: 18px;
+          border: 2px solid transparent;
+          border-top-color: currentColor;
+          border-radius: 50%;
+          animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
 
         .status {
           font-size: 12px;
@@ -740,6 +953,7 @@ const submit = async (e) => {
           flex-wrap: wrap;
         }
 
+        /* Pulse animation for live badge */
         .pill {
           font-size: 10px;
           letter-spacing: 0.12em;
@@ -751,11 +965,35 @@ const submit = async (e) => {
           font-weight: 700;
         }
 
+        .pill-live {
+          position: relative;
+          padding-left: 20px;
+        }
+
+        .pill-live::before {
+          content: '';
+          position: absolute;
+          left: 8px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 6px;
+          height: 6px;
+          background: var(--ok);
+          border-radius: 50%;
+          animation: pulse-live 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-live {
+          0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(41, 211, 145, 0.7); }
+          50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(41, 211, 145, 0); }
+        }
+
         .list {
           display: grid;
           gap: 10px;
         }
 
+        /* Item with glow effect for new items */
         .item {
           display: flex;
           justify-content: space-between;
@@ -765,6 +1003,18 @@ const submit = async (e) => {
           border-radius: 20px;
           border: 1px solid rgba(255,255,255,0.07);
           background: rgba(255,255,255,0.02);
+          transition: all 0.3s ease;
+        }
+
+        .item.new-item {
+          animation: glow-pulse 2s ease-in-out;
+          border-color: var(--gold-2);
+        }
+
+        @keyframes glow-pulse {
+          0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.5); }
+          50% { box-shadow: 0 0 30px 10px rgba(212, 175, 55, 0.3); }
+          100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
         }
 
         .item-left {
@@ -811,178 +1061,216 @@ const submit = async (e) => {
           flex: 0 0 auto;
         }
 
-.empty {
-  color: #94a3b8;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 8px 0;
-}
+        /* Skeleton loading */
+        .skeleton-item {
+          pointer-events: none;
+        }
 
-.section-title.mini {
-  font-size: 24px;
-  margin-bottom: 12px;
-}
+        .skeleton-avatar {
+          background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+          background-size: 200% 100%;
+          animation: skeleton-shimmer 1.5s infinite;
+        }
 
-.leaderboard-list {
-  display: grid;
-  gap: 10px;
-}
+        .skeleton-line {
+          background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+          background-size: 200% 100%;
+          animation: skeleton-shimmer 1.5s infinite;
+          border-radius: 4px;
+        }
 
-.leader-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.02);
-}
+        .skeleton-name {
+          width: 120px;
+          height: 16px;
+          margin-bottom: 6px;
+        }
 
-.leader-meta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
+        .skeleton-text {
+          width: 200px;
+          height: 14px;
+        }
 
-.rank-badge {
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  font-size: 11px;
-  font-weight: 800;
-  color: #091122;
-  background: linear-gradient(135deg, #f5e6a3, #d4af37);
-  flex: 0 0 auto;
-}
+        .skeleton-time {
+          width: 60px;
+          height: 12px;
+        }
 
-.leader-name {
-  font-size: 14px;
-  color: #e2e8f0;
-  font-weight: 700;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+        @keyframes skeleton-shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
 
-.leader-count {
-  font-size: 12px;
-  color: #f8fafc;
-  font-weight: 800;
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 999px;
-  padding: 4px 10px;
-}
+        .empty {
+          color: #94a3b8;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 8px 0;
+        }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
+        .section-title.mini {
+          font-size: 24px;
+          margin-bottom: 12px;
+        }
 
-.stat-box {
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 18px;
-  padding: 14px;
-  background: rgba(255,255,255,0.02);
-}
+        .leaderboard-list {
+          display: grid;
+          gap: 10px;
+        }
 
-.stat-label {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #8ea0be;
-  margin-bottom: 8px;
-  font-weight: 700;
-}
+        .leader-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 12px;
+          padding: 12px 14px;
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.02);
+        }
 
-.stat-value {
-  font-size: clamp(24px, 2.5vw, 38px);
-  line-height: 1;
-  font-weight: 800;
-  color: #f8fafc;
-}
+        .leader-meta {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          min-width: 0;
+        }
 
-.admin-shell {
-  padding-top: 12px;
-}
+        .rank-badge {
+          width: 24px;
+          height: 24px;
+          border-radius: 999px;
+          display: grid;
+          place-items: center;
+          font-size: 11px;
+          font-weight: 800;
+          color: #091122;
+          background: linear-gradient(135deg, #f5e6a3, #d4af37);
+          flex: 0 0 auto;
+        }
 
-.admin-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
+        .leader-name {
+          font-size: 14px;
+          color: #e2e8f0;
+          font-weight: 700;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
 
-.admin-grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 24px;
-}
+        .leader-count {
+          font-size: 12px;
+          color: #f8fafc;
+          font-weight: 800;
+          border: 1px solid rgba(255,255,255,0.15);
+          border-radius: 999px;
+          padding: 4px 10px;
+        }
 
-.admin-auth { grid-column: span 4; }
-.admin-pending { grid-column: span 8; }
+        .stats-grid {
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 12px;
+        }
 
-.admin-note {
-  margin: 0 0 12px;
-  font-size: 12px;
-  color: #8ea0be;
-}
+        .stat-box {
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 18px;
+          padding: 14px;
+          background: rgba(255,255,255,0.02);
+        }
 
-.admin-refresh {
-  width: auto;
-  padding: 10px 18px;
-}
+        .stat-label {
+          display: block;
+          font-size: 10px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #8ea0be;
+          margin-bottom: 8px;
+          font-weight: 700;
+        }
 
-.pending-list {
-  display: grid;
-  gap: 12px;
-}
+        .stat-value {
+          font-size: clamp(24px, 2.5vw, 38px);
+          line-height: 1;
+          font-weight: 800;
+          color: #f8fafc;
+        }
 
-.pending-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px;
-  border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: rgba(255,255,255,0.02);
-}
+        .admin-shell {
+          padding-top: 12px;
+        }
 
-.pending-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
+        .admin-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          margin-bottom: 24px;
+          flex-wrap: wrap;
+        }
 
-.pending-actions {
-  display: flex;
-  gap: 10px;
-}
+        .admin-grid {
+          display: grid;
+          grid-template-columns: repeat(12, minmax(0, 1fr));
+          gap: 24px;
+        }
 
-.btn-ghost {
-  background: rgba(255,255,255,0.08);
-  color: #e2e8f0;
-}
+        .admin-auth { grid-column: span 4; }
+        .admin-pending { grid-column: span 8; }
 
-.btn-ghost:hover {
-  background: rgba(255,255,255,0.16);
-}
+        .admin-note {
+          margin: 0 0 12px;
+          font-size: 12px;
+          color: #8ea0be;
+        }
 
-@media (max-width: 1024px) {
-  .admin-auth, .admin-pending { grid-column: span 12; }
-}
+        .admin-refresh {
+          width: auto;
+          padding: 10px 18px;
+        }
 
-.footer {
+        .pending-list {
+          display: grid;
+          gap: 12px;
+        }
 
+        .pending-row {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          padding: 14px;
+          border-radius: 18px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.02);
+        }
+
+        .pending-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+        }
+
+        .pending-actions {
+          display: flex;
+          gap: 10px;
+        }
+
+        .btn-ghost {
+          background: rgba(255,255,255,0.08);
+          color: #e2e8f0;
+        }
+
+        .btn-ghost:hover {
+          background: rgba(255,255,255,0.16);
+        }
+
+        @media (max-width: 1024px) {
+          .admin-auth, .admin-pending { grid-column: span 12; }
+        }
+
+        .footer {
           margin-top: 48px;
           text-align: center;
           opacity: 0.35;
@@ -993,189 +1281,204 @@ const submit = async (e) => {
           color: #b7c2d7;
         }
 
-@media (max-width: 1024px) {
-  .countdown, .niyet, .form-card, .flow-card, .leaderboard-card, .stats-card {
-    grid-column: span 12;
-  }
+        @media (max-width: 1024px) {
+          .countdown, .niyet, .form-card, .flow-card, .leaderboard-card, .stats-card {
+            grid-column: span 12;
+          }
 
-  .count-item strong { font-size: 44px; }
-  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
+          .count-item strong { font-size: 44px; }
+          .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
       `}</style>
 
+      <StarsBackground />
+      <Confetti active={showConfetti} />
+      
       <div className="orb orb-a" />
       <div className="orb orb-b" />
 
-{isAdminRoute ? (
-  <AdminPanel
-    token={adminToken}
-    onTokenChange={setAdminToken}
-    onSaveToken={saveAdminToken}
-    pending={pendingItems}
-    loading={adminLoading}
-    status={adminStatus}
-    onRefresh={fetchPending}
-    onApprove={approvePending}
-    onReject={rejectPending}
-  />
-) : (
-  <main className="container">
-        <div className="topbar">
-          <div>
-            <h1 className="title">
-              İyilik <span className="gold">Hareketi</span>
-            </h1>
-            <p className="sub">Ramazan 2026 • Topluluk Akışı</p>
-          </div>
-
-          <div className="time-wrap">
-            <div className="clock">
-              {time.toLocaleTimeString('tr-TR', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })}
-            </div>
-            <div className="date">
-              {time.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' })}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid">
-          <section className="glass-card countdown">
-            <div className="label-row">
-              <span className="dot" />
-              <span className="micro">Ramazan'a Kalan Süre ({targetDate.toLocaleDateString('tr-TR')})</span>
-            </div>
-            <div className="count-grid">
-              {countdownCells.map((item) => (
-                <div key={item.label} className="count-item">
-                  <strong>{item.val}</strong>
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="glass-card niyet">
-            <h3>Günün Niyeti</h3>
-            <p>"{gununNiyeti.metin}"</p>
-            <div className="line">{gununNiyeti.kaynak}</div>
-          </section>
-
-          <section className="glass-card form-card">
-            <h3 className="section-title">İyilik Bırak</h3>
-            <form className="fields" onSubmit={submit}>
-              <input
-                className="input"
-                placeholder="Adınız"
-                value={form.isim}
-                onChange={(e) => setForm((prev) => ({ ...prev, isim: e.target.value }))}
-              />
-              <input
-                className="input"
-                placeholder="Soyisminiz"
-                value={form.soyisim}
-                onChange={(e) => setForm((prev) => ({ ...prev, soyisim: e.target.value }))}
-              />
-              <textarea
-                className="textarea"
-                placeholder="Bugün ne yaptın?"
-                value={form.iyilik}
-                onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
-              />
-              <button className="btn" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
-              </button>
-            </form>
-
-            {error ? <div className="status error">{error}</div> : null}
-            {success ? <div className="status ok">{success}</div> : null}
-          </section>
-
-  <section className="glass-card flow-card">
-    <div className="flow-head">
-      <h3 className="section-title">İyilik Akışı</h3>
-      <span className="pill">{iyilikler.length} Paylaşım</span>
-    </div>
-
-    <div className="list">
-      {isLoading ? (
-        <div className="empty">Yükleniyor...</div>
-      ) : iyilikler.length === 0 ? (
-        <div className="empty">Henüz paylaşım yok.</div>
+      {isAdminRoute ? (
+        <AdminPanel
+          token={adminToken}
+          onTokenChange={setAdminToken}
+          onSaveToken={saveAdminToken}
+          pending={pendingItems}
+          loading={adminLoading}
+          status={adminStatus}
+          onRefresh={fetchPending}
+          onApprove={approvePending}
+          onReject={rejectPending}
+        />
       ) : (
-        iyilikler.map((i) => (
-          <div key={i.id} className="item">
-            <div className="item-left">
-              <div className="avatar">{getInitials(i.isim, i.soyisim)}</div>
-              <div>
-                <div className="item-name">{i.isim} {i.soyisim}</div>
-                <div className="item-text">{i.iyilik || i.metin || '-'}</div>
+        <main className="container">
+          <div className={`topbar ${isScrolled ? 'scrolled' : ''}`}>
+            <div>
+              <h1 className="title">
+                İyilik <span className="gold">Hareketi</span>
+              </h1>
+              <p className="sub">Ramazan 2026 • Topluluk Akışı</p>
+            </div>
+
+            <div className="time-wrap">
+              <div className="clock">
+                {time.toLocaleTimeString('tr-TR', {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}
+              </div>
+              <div className="date">
+                {time.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' })}
               </div>
             </div>
-            <div className="item-time">{formatAgo(i.tarih)}</div>
           </div>
-        ))
-      )}
-    </div>
-  </section>
 
-  <section className="glass-card leaderboard-card">
-    <div className="flow-head">
-      <h3 className="section-title mini">Liderlik Tablosu</h3>
-      <span className="pill">İlk 5</span>
-    </div>
+          <div className="grid">
+            <section className="glass-card countdown">
+              <div className="label-row">
+                <span className="dot" />
+                <span className="micro">Ramazan'a Kalan Süre ({targetDate.toLocaleDateString('tr-TR')})</span>
+              </div>
+              <div className="count-grid">
+                {countdownCells.map((item) => (
+                  <div key={item.label} className="count-item">
+                    <strong>{item.val}</strong>
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-    <div className="leaderboard-list">
-      {leaderboard.length === 0 ? (
-        <div className="empty">Henüz liderlik verisi yok.</div>
-      ) : (
-        leaderboard.map((kisi, index) => (
-          <div key={`${kisi.isim}-${index}`} className="leader-row">
-            <div className="leader-meta">
-              <span className="rank-badge">{index + 1}</span>
-              <span className="leader-name">{kisi.isim}</span>
-            </div>
-            <span className="leader-count">{kisi.adet}</span>
+            <section className="glass-card niyet">
+              <h3>Günün Niyeti</h3>
+              <p>"{gununNiyeti.metin}"</p>
+              <div className="line">{gununNiyeti.kaynak}</div>
+            </section>
+
+            <section className="glass-card form-card">
+              <h3 className="section-title">İyilik Bırak</h3>
+              <form className="fields" onSubmit={submit}>
+                <input
+                  className="input"
+                  placeholder="Adınız"
+                  value={form.isim}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isim: e.target.value }))}
+                />
+                <input
+                  className="input"
+                  placeholder="Soyisminiz"
+                  value={form.soyisim}
+                  onChange={(e) => setForm((prev) => ({ ...prev, soyisim: e.target.value }))}
+                />
+                <textarea
+                  className="textarea"
+                  placeholder="Bugün ne yaptın?"
+                  value={form.iyilik}
+                  onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
+                />
+                <button className="btn" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <span className="btn-spinner" />
+                      Gönderiliyor...
+                    </>
+                  ) : (
+                    'Gönder'
+                  )}
+                </button>
+              </form>
+
+              {error ? <div className="status error">{error}</div> : null}
+              {success ? <div className="status ok">{success}</div> : null}
+            </section>
+
+            <section className="glass-card flow-card">
+              <div className="flow-head">
+                <h3 className="section-title">İyilik Akışı</h3>
+                <span className="pill">{iyilikler.length} Paylaşım</span>
+              </div>
+
+              <div className="list">
+                {isLoading ? (
+                  <>
+                    <SkeletonItem />
+                    <SkeletonItem />
+                    <SkeletonItem />
+                  </>
+                ) : iyilikler.length === 0 ? (
+                  <div className="empty">Henüz paylaşım yok.</div>
+                ) : (
+                  iyilikler.map((i, index) => (
+                    <div 
+                      key={i.id} 
+                      className={`item ${index === 0 && newItemId ? 'new-item' : ''}`}
+                    >
+                      <div className="item-left">
+                        <div className="avatar">{getInitials(i.isim, i.soyisim)}</div>
+                        <div>
+                          <div className="item-name">{i.isim} {i.soyisim}</div>
+                          <div className="item-text">{i.iyilik || i.metin || '-'}</div>
+                        </div>
+                      </div>
+                      <div className="item-time">{formatAgo(i.tarih)}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section className="glass-card leaderboard-card">
+              <div className="flow-head">
+                <h3 className="section-title mini">Liderlik Tablosu</h3>
+                <span className="pill">İlk 5</span>
+              </div>
+
+              <div className="leaderboard-list">
+                {leaderboard.length === 0 ? (
+                  <div className="empty">Henüz liderlik verisi yok.</div>
+                ) : (
+                  leaderboard.map((kisi, index) => (
+                    <div key={`${kisi.isim}-${index}`} className="leader-row">
+                      <div className="leader-meta">
+                        <span className="rank-badge">{index + 1}</span>
+                        <span className="leader-name">{kisi.isim}</span>
+                      </div>
+                      <span className="leader-count">{kisi.adet}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </section>
+
+            <section className="glass-card stats-card">
+              <div className="flow-head">
+                <h3 className="section-title mini">İstatistikler</h3>
+                <span className="pill pill-live">Canlı</span>
+              </div>
+
+              <div className="stats-grid">
+                <div className="stat-box">
+                  <span className="stat-label">Bugün Eklenen</span>
+                  <strong className="stat-value">{istatistikler.bugunEklenen}</strong>
+                </div>
+                <div className="stat-box">
+                  <span className="stat-label">Toplam İyilik</span>
+                  <strong className="stat-value">{istatistikler.toplamIyilik}</strong>
+                </div>
+                <div className="stat-box">
+                  <span className="stat-label">Bu Hafta</span>
+                  <strong className="stat-value">{istatistikler.haftalikEklenen}</strong>
+                </div>
+                <div className="stat-box">
+                  <span className="stat-label">Katılımcı</span>
+                  <strong className="stat-value">{istatistikler.katilimciSayisi}</strong>
+                </div>
+              </div>
+            </section>
           </div>
-        ))
-      )}
-    </div>
-  </section>
 
-  <section className="glass-card stats-card">
-    <div className="flow-head">
-      <h3 className="section-title mini">İstatistikler</h3>
-      <span className="pill">Canlı</span>
-    </div>
-
-    <div className="stats-grid">
-      <div className="stat-box">
-        <span className="stat-label">Bugün Eklenen</span>
-        <strong className="stat-value">{istatistikler.bugunEklenen}</strong>
-      </div>
-      <div className="stat-box">
-        <span className="stat-label">Toplam İyilik</span>
-        <strong className="stat-value">{istatistikler.toplamIyilik}</strong>
-      </div>
-      <div className="stat-box">
-        <span className="stat-label">Bu Hafta</span>
-        <strong className="stat-value">{istatistikler.haftalikEklenen}</strong>
-      </div>
-      <div className="stat-box">
-        <span className="stat-label">Katılımcı</span>
-        <strong className="stat-value">{istatistikler.katilimciSayisi}</strong>
-      </div>
-    </div>
-  </section>
-</div>
-
-
-        <footer className="footer">İyilikle Kalın • 2026</footer>
-      </main>
+          <footer className="footer">İyilikle Kalın • 2026</footer>
+        </main>
       )}
     </div>
   );
