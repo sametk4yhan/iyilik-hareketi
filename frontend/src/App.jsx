@@ -75,8 +75,12 @@ function RamazanPremiumUIInner() {
   const [form, setForm] = useState({ isim: '', soyisim: '', iyilik: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+const [error, setError] = useState('');
+const [success, setSuccess] = useState('');
+const [gununNiyeti, setGununNiyeti] = useState({
+  metin: 'Her iyilik yeni bir iyiliğin kapısını açar.',
+  kaynak: 'Ramazan Ruhu',
+});
 
   const fetchIyilikler = useCallback(async () => {
     try {
@@ -105,14 +109,43 @@ function RamazanPremiumUIInner() {
     return () => clearInterval(poll);
   }, [fetchIyilikler]);
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTime(new Date());
-      setCountdown(getCountdownParts(targetDate));
-    }, 1000);
+useEffect(() => {
+  const timer = setInterval(() => {
+    setTime(new Date());
+    setCountdown(getCountdownParts(targetDate));
+  }, 1000);
 
-    return () => clearInterval(timer);
-  }, [targetDate]);
+  return () => clearInterval(timer);
+}, [targetDate]);
+
+useEffect(() => {
+  let active = true;
+
+  const fetchGununNiyeti = async () => {
+    try {
+      const response = await fetch(`${CONFIG.WORKER_URL}/gunun-niyeti`);
+      const data = await response.json();
+
+      if (!response.ok || !data?.success || !data?.data?.metin) return;
+      if (!active) return;
+
+      setGununNiyeti({
+        metin: data.data.metin,
+        kaynak: data.data.kaynak || 'Ramazan Ruhu',
+      });
+    } catch {
+      // Sessiz fallback: kartta varsayilan metin kalir.
+    }
+  };
+
+  fetchGununNiyeti();
+  const niyetTimer = setInterval(fetchGununNiyeti, 60 * 60 * 1000);
+
+  return () => {
+    active = false;
+    clearInterval(niyetTimer);
+  };
+}, []);
 
 const countdownCells = useMemo(
   () => [
@@ -756,8 +789,8 @@ const submit = async (e) => {
 
           <section className="glass-card niyet">
             <h3>Günün Niyeti</h3>
-            <p>"Her iyilik yeni bir iyiliğin kapısını açar."</p>
-            <div className="line">Ramazan Ruhu</div>
+            <p>"{gununNiyeti.metin}"</p>
+            <div className="line">{gununNiyeti.kaynak}</div>
           </section>
 
           <section className="glass-card form-card">

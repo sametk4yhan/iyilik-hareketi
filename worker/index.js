@@ -17,6 +17,56 @@ const BANNED_PATTERNS = [
   /s[uü]rt[uü][kq]/i,
 ];
 
+const DAILY_NIYET_SOZLERI = [
+  { metin: 'Bir tebessüm de sadakadır.', kaynak: 'Hadis-i Şerif' },
+  { metin: 'İyilik, kalbi yormaz; kalbi genişletir.', kaynak: 'İyilik Hareketi' },
+  { metin: 'Az da olsa sürekli yapılan iyilik berekettir.', kaynak: 'Ramazan Notu' },
+  { metin: 'Paylaşınca eksilmez, çoğalır: merhamet.', kaynak: 'İyilik Hareketi' },
+  { metin: 'Kapı çalmak bazen bir gönlü onarmaktır.', kaynak: 'Günün Sözü' },
+  { metin: 'İnsana en çok yakışan, faydalı olmaktır.', kaynak: 'Günün Sözü' },
+  { metin: 'Kırmadan konuşmak da bir iyiliktir.', kaynak: 'İyilik Hareketi' },
+  { metin: 'Bir kişinin yükünü hafifletmek, büyük bir ibadettir.', kaynak: 'Ramazan Notu' },
+  { metin: 'Niyet hayır olunca yol da hayır olur.', kaynak: 'Günün Sözü' },
+  { metin: 'İyilik gizli olunca daha kıymetli olur.', kaynak: 'Günün Sözü' },
+  { metin: 'Bugün bir kalbi ferahlat.', kaynak: 'İyilik Hareketi' },
+  { metin: 'Bir selam, bir duaya vesile olabilir.', kaynak: 'Ramazan Notu' },
+  { metin: 'Güzel söz de bir sadakadır.', kaynak: 'Hadis-i Şerif' },
+  { metin: 'İyilik eden, önce kendi ruhunu iyileştirir.', kaynak: 'İyilik Hareketi' },
+  { metin: 'Bugün birine kolaylık ol.', kaynak: 'Günün Sözü' },
+  { metin: 'Merhamet, en sessiz ama en güçlü dildir.', kaynak: 'İyilik Hareketi' },
+  { metin: 'İyilik bulaşıcıdır; sen başlat.', kaynak: 'Günün Sözü' },
+  { metin: 'Bir teşekkür, bir insanın gününü değiştirir.', kaynak: 'Ramazan Notu' },
+  { metin: 'Gönül almak, en zarif iyiliktir.', kaynak: 'Günün Sözü' },
+  { metin: 'Bugün birinin duasında yer edin.', kaynak: 'İyilik Hareketi' },
+];
+
+function getIstanbulDateParts() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Istanbul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+
+  const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+  return {
+    year: Number(map.year),
+    month: Number(map.month),
+    day: Number(map.day),
+  };
+}
+
+function getDailyNiyet() {
+  const { year, month, day } = getIstanbulDateParts();
+  const dayNumber = Math.floor(Date.UTC(year, month - 1, day) / 86400000);
+  const index = ((dayNumber % DAILY_NIYET_SOZLERI.length) + DAILY_NIYET_SOZLERI.length) % DAILY_NIYET_SOZLERI.length;
+  return {
+    ...DAILY_NIYET_SOZLERI[index],
+    index,
+    date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
+  };
+}
+
 function containsBannedWord(text = '') {
   const normalized = text.toLowerCase();
   return BANNED_PATTERNS.some((pattern) => pattern.test(normalized));
@@ -168,6 +218,14 @@ export default {
           { headers: corsHeaders }
         );
       }
+
+// GET /gunun-niyeti
+if (path === '/gunun-niyeti' && request.method === 'GET') {
+  const niyet = getDailyNiyet();
+  return new Response(JSON.stringify({ success: true, data: niyet }), {
+    headers: corsHeaders,
+  });
+}
 
       // GET /iyilikler
       if (path === '/iyilikler' && request.method === 'GET') {
