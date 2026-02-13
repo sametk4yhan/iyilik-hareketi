@@ -1,181 +1,142 @@
 import React, { useState, useEffect } from 'react';
 
-// --- Alt Bileşenler (Modernize Edilmiş) ---
-
-const GeometricOverlay = () => (
-  <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">
-    <svg className="absolute w-full h-full" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <pattern id="islamic-grid" x="0" y="0" width="80" height="80" patternUnits="userSpaceOnUse">
-          <path d="M40 0L80 40L40 80L0 40Z" fill="none" stroke="#d4af37" strokeWidth="0.5" />
-          <circle cx="40" cy="40" r="15" fill="none" stroke="#d4af37" strokeWidth="0.2" />
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#islamic-grid)" />
-    </svg>
-  </div>
-);
-
-const Card = ({ children, className = "" }) => (
-  <div className={`bg-slate-900/40 backdrop-blur-xl border border-white/5 rounded-3xl shadow-2xl ${className}`}>
-    {children}
-  </div>
-);
-
-const IyilikHareketi = () => {
-  const [currentTime, setCurrentTime] = useState(new Date());
-  const [countdown, setCountdown] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [iyilikler, setIyilikler] = useState([
-    { id: 1, isim: 'Ahmet Y.', iyilik: 'Yaşlı komşuma market alışverişi yaptım.', tarih: new Date(Date.now() - 3600000) },
-    { id: 2, isim: 'Fatma D.', iyilik: 'Sokak kedileri için kapı önüne mama ve su bıraktım.', tarih: new Date(Date.now() - 7200000) },
+const ModernRamazanUI = () => {
+  const [time, setTime] = useState(new Date());
+  const [iyilikler] = useState([
+    { id: 1, kisi: "Ahmet Erkan", metin: "Bugün mahalledeki fırına askıda ekmek bıraktım.", vakit: "10 dk önce" },
+    { id: 2, kisi: "Selin Yılmaz", metin: "Öğrenci evine iftariyelik hazırlayıp gönderdik.", vakit: "45 dk önce" },
+    { id: 3, kisi: "Hüseyin Avni", metin: "Barınaktaki dostlarımız için mama bağışı yaptık.", vakit: "2 saat önce" },
   ]);
-  const [formData, setFormData] = useState({ isim: '', soyisim: '', iyilik: '' });
-  const [showSuccess, setShowSuccess] = useState(false);
-
-  const ramazanBaslangic = new Date('2025-03-01T00:00:00');
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      const now = new Date();
-      setCurrentTime(now);
-      const diff = ramazanBaslangic - now;
-      if (diff > 0) {
-        setCountdown({
-          days: Math.floor(diff / (1000 * 60 * 60 * 24)),
-          hours: Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
-          minutes: Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)),
-          seconds: Math.floor((diff % (1000 * 60)) / 1000)
-        });
-      }
-    }, 1000);
+    const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!formData.isim || !formData.iyilik) return;
-    const yeniIyilik = { id: Date.now(), ...formData, tarih: new Date() };
-    setIyilikler(prev => [yeniIyilik, ...prev]);
-    setFormData({ isim: '', soyisim: '', iyilik: '' });
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
-  };
-
   return (
-    <div className="min-h-screen bg-[#050810] text-slate-200 font-sans selection:bg-amber-500/30">
+    <div className="min-h-screen bg-[#030712] text-slate-100 font-sans selection:bg-amber-500/30 overflow-hidden relative">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap');
-        .font-serif-elegant { font-family: 'Cinzel', serif; }
-        .font-inter { font-family: 'Inter', sans-serif; }
-        .gold-gradient { background: linear-gradient(135deg, #f5e6a3 0%, #d4af37 50%, #8a6d1d 100%); }
-        .text-shimmer {
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Cinzel+Decorative:wght@700&display=swap');
+        
+        .font-main { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .font-ornate { font-family: 'Cinzel Decorative', serif; }
+        
+        .bg-mesh {
+          background-image: 
+            radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.15) 0px, transparent 50%),
+            radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
+            radial-gradient(at 50% 100%, rgba(30, 58, 138, 0.3) 0px, transparent 50%);
+        }
+
+        .glass {
+          background: rgba(255, 255, 255, 0.03);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        .gold-shimmer {
           background: linear-gradient(90deg, #d4af37, #f5e6a3, #d4af37);
-          background-size: 200% auto;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          animation: shimmer 5s linear infinite;
+          background-size: 200% auto;
+          animation: shimmer 4s linear infinite;
         }
+
         @keyframes shimmer { to { background-position: 200% center; } }
+        
+        .timer-unit {
+          background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
+          border: 1px solid rgba(212, 175, 55, 0.2);
+        }
       `}</style>
 
-      <GeometricOverlay />
+      {/* Arka Plan Katmanları */}
+      <div className="absolute inset-0 bg-mesh opacity-50" />
+      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30" />
 
-      <main className="relative z-10 max-w-4xl mx-auto px-6 py-12">
+      <main className="relative z-10 max-w-6xl mx-auto px-6 py-12 flex flex-col min-h-screen">
         
-        {/* Header & Clock */}
-        <header className="text-center space-y-6 mb-16">
-          <div className="inline-block px-4 py-1 rounded-full border border-amber-500/20 bg-amber-500/5 text-amber-500 text-xs tracking-[0.3em] uppercase mb-4">
-            Mübarek Ramazan-ı Şerif'e Doğru
+        {/* Üst Kısım: Başlık ve Büyük Saat */}
+        <header className="flex flex-col items-center justify-center flex-1 py-10">
+          <div className="flex items-center gap-4 mb-6 opacity-80">
+            <div className="h-px w-12 bg-amber-500/50" />
+            <span className="font-ornate text-amber-500 tracking-[0.3em] uppercase text-sm">İyilik Hareketi</span>
+            <div className="h-px w-12 bg-amber-500/50" />
           </div>
-          <h1 className="font-serif-elegant text-5xl md:text-7xl font-bold text-shimmer">
-            İyilik Hareketi
-          </h1>
-          <div className="text-4xl md:text-5xl font-light tracking-widest text-white/90 font-inter">
-            {currentTime.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-            <span className="text-xl ml-2 text-amber-500/50">
-              {currentTime.toLocaleTimeString('tr-TR', { second: '2-digit' })}
-            </span>
+
+          <div className="relative group cursor-default">
+            <div className="absolute -inset-8 bg-amber-500/10 blur-3xl rounded-full opacity-50 group-hover:opacity-80 transition-opacity" />
+            <h1 className="font-main text-8xl md:text-[10rem] font-extrabold tracking-tighter leading-none flex items-baseline gap-2">
+              <span className="text-white drop-shadow-2xl">
+                {time.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              <span className="text-3xl md:text-5xl font-light text-amber-500/60 font-main">
+                {time.toLocaleTimeString('tr-TR', { second: '2-digit' })}
+              </span>
+            </h1>
           </div>
+
+          <p className="mt-8 font-main text-lg text-slate-400 tracking-wide font-light">
+            {time.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
         </header>
 
-        {/* Countdown Grid */}
-        <div className="grid grid-cols-4 gap-4 mb-16 max-w-2xl mx-auto">
-          {[
-            { label: 'Gün', value: countdown.days },
-            { label: 'Saat', value: countdown.hours },
-            { label: 'Dak.', value: countdown.minutes },
-            { label: 'Sn.', value: countdown.seconds },
-          ].map((item, i) => (
-            <div key={i} className="text-center group">
-              <div className="bg-white/5 border border-white/10 rounded-2xl p-4 group-hover:border-amber-500/30 transition-colors">
-                <div className="text-2xl md:text-4xl font-bold text-amber-100">{String(item.value).padStart(2, '0')}</div>
-                <div className="text-[10px] uppercase tracking-tighter text-amber-500/60 mt-1">{item.label}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="grid md:grid-cols-5 gap-8">
+        {/* Orta Kısım: İyilik Kartları Paneli */}
+        <section className="grid md:grid-cols-2 gap-8 mb-12">
           
-          {/* Form Section */}
-          <div className="md:col-span-2">
-            <Card className="p-8 sticky top-8">
-              <h3 className="font-serif-elegant text-xl text-amber-100 mb-6">Bir İyilik Bırak</h3>
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <input
-                  placeholder="Adınız"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 transition-all"
-                  value={formData.isim}
-                  onChange={e => setFormData({...formData, isim: e.target.value})}
-                />
-                <textarea
-                  placeholder="Bugün ne iyilik yaptınız?"
-                  rows="4"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500/50 transition-all resize-none"
-                  value={formData.iyilik}
-                  onChange={e => setFormData({...formData, iyilik: e.target.value})}
-                />
-                <button className="w-full gold-gradient text-slate-900 font-bold py-4 rounded-xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg shadow-amber-500/20">
-                  Paylaş
-                </button>
-              </form>
-              {showSuccess && (
-                <div className="mt-4 text-center text-emerald-400 text-sm animate-bounce">
-                  ✨ İyiliğiniz kaydedildi!
-                </div>
-              )}
-            </Card>
-          </div>
-
-          {/* List Section */}
-          <div className="md:col-span-3 space-y-4">
-            <div className="flex justify-between items-end mb-4 px-2">
-              <h3 className="font-serif-elegant text-xl text-amber-100">İyilik Zinciri</h3>
-              <span className="text-xs text-slate-500">{iyilikler.length} toplam paylaşım</span>
+          {/* Sol: İyilik Paylaşım Listesi */}
+          <div className="glass rounded-[2.5rem] p-8 relative overflow-hidden">
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="font-ornate text-xl gold-shimmer">İyilikler Zinciri</h2>
+              <div className="px-3 py-1 bg-amber-500/10 rounded-full border border-amber-500/20 text-[10px] text-amber-500 uppercase tracking-widest">Canlı Akış</div>
             </div>
-            
-            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+
+            <div className="space-y-6 max-h-80 overflow-y-auto pr-2">
               {iyilikler.map((item) => (
-                <div key={item.id} className="group relative bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 p-6 rounded-2xl transition-all">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-amber-500 font-semibold text-sm">{item.isim}</span>
-                    <span className="text-[10px] text-slate-600 uppercase tracking-widest">Az Önce</span>
+                <div key={item.id} className="group border-b border-white/5 pb-4 last:border-0 hover:bg-white/[0.02] transition-all rounded-lg p-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-semibold text-white/80 group-hover:text-amber-400 transition-colors">{item.kisi}</span>
+                    <span className="text-[10px] text-slate-500">{item.vakit}</span>
                   </div>
-                  <p className="text-slate-300 leading-relaxed italic">"{item.iyilik}"</p>
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-amber-500 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <p className="text-sm text-slate-400 leading-relaxed italic">"{item.metin}"</p>
                 </div>
               ))}
             </div>
           </div>
 
-        </div>
+          {/* Sağ: İstatistik / Mottolar */}
+          <div className="flex flex-col gap-6">
+            <div className="glass rounded-[2rem] p-8 flex-1 flex flex-col justify-center border-l-4 border-l-amber-500">
+              <span className="text-amber-500 text-xs uppercase tracking-widest mb-2 font-bold">Günün Ayeti</span>
+              <p className="font-main text-lg leading-relaxed text-slate-200 italic font-light">
+                "İyiliğin karşılığı, yalnız iyiliktir."
+              </p>
+              <span className="text-slate-500 text-xs mt-4">— Rahmân Suresi, 60. Ayet</span>
+            </div>
 
-        <footer className="mt-20 text-center opacity-40 hover:opacity-100 transition-opacity">
-          <p className="text-xs tracking-[0.4em] uppercase">Her İyilik Bir Sadakadır</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="glass rounded-3xl p-6 text-center">
+                <div className="text-2xl font-bold text-white mb-1">1,240</div>
+                <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Toplam İyilik</div>
+              </div>
+              <div className="glass rounded-3xl p-6 text-center">
+                <div className="text-2xl font-bold text-amber-500 mb-1">14</div>
+                <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Gün Kaldı</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="py-6 border-t border-white/5 text-center">
+          <p className="text-[10px] text-slate-600 uppercase tracking-[0.5em] font-bold">
+            2026 • Ramazan Meditasyonu
+          </p>
         </footer>
       </main>
     </div>
   );
 };
 
-export default IyilikHareketi;
+export default ModernRamazanUI;
