@@ -178,6 +178,41 @@ async function checkDuplicate(env, text, ip) {
   return true;
 }
 
+function getAuthToken(request) {
+  const header = request.headers.get('Authorization') || '';
+  return header.replace(/^Bearer\s+/i, '').trim();
+}
+
+function requireAdmin(request, env) {
+  const token = (env.ADMIN_TOKEN || '').trim();
+  if (!token) {
+    return { ok: false, reason: 'ADMIN_TOKEN is not set' };
+  }
+
+  const provided = getAuthToken(request);
+  return provided === token
+    ? { ok: true }
+    : { ok: false, reason: 'Invalid admin token' };
+}
+
+async function findPendingRaw(env, id) {
+  const data = await upstashRequest(env, 'LRANGE', ['pending', 0, 199]);
+  const list = data || [];
+
+  for (const raw of list) {
+    try {
+      const item = JSON.parse(raw);
+      if (String(item.id) === String(id)) {
+        return { raw, item };
+      }
+    } catch {
+      // Skip malformed entries.
+    }
+  }
+
+  return null;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -225,7 +260,7 @@ if (path === '/' && request.method === 'GET') {
     JSON.stringify({
       success: true,
       message: 'Iyilik API calisiyor.',
-      endpoints: ['/health', '/gunun-niyeti', '/iyilikler', '/leaderboard', '/stats'],
+      endpoints: ['/health', '/gunun-niyeti', '/iyilikler', '/leaderboard', '/stats', '/pending'],
     }),
     { headers: corsHeaders }
   );
@@ -239,6 +274,93 @@ if (path === '/gunun-niyeti' && request.method === 'GET') {
   });
 }
 
+
+// GET /pending (admin)
+if (path === '/pending' && request.method === 'GET') {
+  const auth = requireAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(
+      JSON.stringify({ success: false, error: auth.reason }),
+      { status: 401, headers: corsHeaders }
+    );
+  }
+
+  const data = await upstashRequest(env, 'LRANGE', ['pending', 0, 99]);
+  const pending = (data || []).map((item) => JSON.parse(item));
+  return new Response(JSON.stringify({ success: true, data: pending }), {
+    headers: corsHeaders,
+  });
+}
+
+// POST /pending/approve (admin)
+if (path === '/pending/approve' && request.method === 'POST') {
+  const auth = requireAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(
+      JSON.stringify({ success: false, error: auth.reason }),
+      { status: 401, headers: corsHeaders }
+    );
+  }
+
+  const body = await request.json();
+  const { id } = body || {};
+  if (!id) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'ID gerekli.' }),
+      { status: 400, headers: corsHeaders }
+    );
+  }
+
+  const found = await findPendingRaw(env, id);
+  if (!found) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Kayit bulunamadi.' }),
+      { status: 404, headers: corsHeaders }
+    );
+  }
+
+  await upstashRequest(env, 'LREM', ['pending', 1, found.raw]);
+  await upstashRequest(env, 'LPUSH', ['iyilikler', found.raw]);
+  await upstashRequest(env, 'LTRIM', ['iyilikler', 0, 499]);
+
+  return new Response(JSON.stringify({ success: true }), {
+    headers: corsHeaders,
+  });
+}
+
+// POST /pending/reject (admin)
+if (path === '/pending/reject' && request.method === 'POST') {
+  const auth = requireAdmin(request, env);
+  if (!auth.ok) {
+    return new Response(
+      JSON.stringify({ success: false, error: auth.reason }),
+      { status: 401, headers: corsHeaders }
+    );
+  }
+
+  const body = await request.json();
+  const { id } = body || {};
+  if (!id) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'ID gerekli.' }),
+      { status: 400, headers: corsHeaders }
+    );
+  }
+
+  const found = await findPendingRaw(env, id);
+  if (!found) {
+    return new Response(
+      JSON.stringify({ success: false, error: 'Kayit bulunamadi.' }),
+      { status: 404, headers: corsHeaders }
+    );
+  }
+
+  await upstashRequest(env, 'LREM', ['pending', 1, found.raw]);
+
+  return new Response(JSON.stringify({ success: true }), {
+    headers: corsHeaders,
+  });
+}
       // GET /iyilikler
       if (path === '/iyilikler' && request.method === 'GET') {
         const data = await upstashRequest(env, 'LRANGE', ['iyilikler', 0, 99]);

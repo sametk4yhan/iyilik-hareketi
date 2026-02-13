@@ -66,6 +66,91 @@ function getInitials(isim, soyisim) {
   return v || "IH";
 }
 
+
+function AdminPanel({
+  token,
+  onTokenChange,
+  onSaveToken,
+  pending,
+  loading,
+  status,
+  onRefresh,
+  onApprove,
+  onReject,
+}) {
+  return (
+    <div className="admin-shell container">
+      <div className="admin-header">
+        <div>
+          <h1 className="title">Admin Panel</h1>
+          <p className="sub">Bekleyen iyilikleri yönet</p>
+        </div>
+        <button className="btn admin-refresh" type="button" onClick={onRefresh}>
+          Yenile
+        </button>
+      </div>
+
+      <div className="admin-grid">
+        <section className="glass-card admin-auth">
+          <h3 className="section-title mini">Erişim</h3>
+          <p className="admin-note">ADMIN_TOKEN değerini girerek paneli aç.</p>
+          <div className="fields">
+            <input
+              className="input"
+              type="password"
+              placeholder="ADMIN_TOKEN"
+              value={token}
+              onChange={(e) => onTokenChange(e.target.value)}
+            />
+            <button className="btn" type="button" onClick={onSaveToken}>
+              Kaydet
+            </button>
+          </div>
+          {status?.message ? (
+            <div className={`status ${status.type === 'error' ? 'error' : 'ok'}`}>
+              {status.message}
+            </div>
+          ) : null}
+        </section>
+
+        <section className="glass-card admin-pending">
+          <div className="flow-head">
+            <h3 className="section-title mini">Bekleyenler</h3>
+            <span className="pill">{pending.length} kayıt</span>
+          </div>
+          {loading ? (
+            <div className="empty">Yükleniyor...</div>
+          ) : pending.length === 0 ? (
+            <div className="empty">Bekleyen kayıt yok.</div>
+          ) : (
+            <div className="pending-list">
+              {pending.map((item) => (
+                <div key={item.id} className="pending-row">
+                  <div className="pending-left">
+                    <div className="avatar">{getInitials(item.isim, item.soyisim)}</div>
+                    <div>
+                      <div className="item-name">{item.isim} {item.soyisim}</div>
+                      <div className="item-text">{item.iyilik}</div>
+                    </div>
+                  </div>
+                  <div className="pending-actions">
+                    <button className="btn btn-ghost" type="button" onClick={() => onReject(item.id)}>
+                      Reddet
+                    </button>
+                    <button className="btn" type="button" onClick={() => onApprove(item.id)}>
+                      Onayla
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  );
+}
+
 function RamazanPremiumUIInner() {
   const [time, setTime] = useState(new Date());
   const [targetDate] = useState(getTargetRamadanDate);
@@ -81,6 +166,10 @@ const [gununNiyeti, setGununNiyeti] = useState({
   metin: 'Her iyilik yeni bir iyiliğin kapısını açar.',
   kaynak: 'Ramazan Ruhu',
 });
+const [adminToken, setAdminToken] = useState('');
+const [adminStatus, setAdminStatus] = useState({ type: '', message: '' });
+const [pendingItems, setPendingItems] = useState([]);
+const [adminLoading, setAdminLoading] = useState(false);
 
   const fetchIyilikler = useCallback(async () => {
     try {
@@ -147,6 +236,100 @@ useEffect(() => {
   };
 }, []);
 
+useEffect(() => {
+  if (typeof window === 'undefined') return;
+  const stored = window.localStorage.getItem('ih_admin_token');
+  if (stored) setAdminToken(stored);
+}, []);
+
+const fetchPending = useCallback(async () => {
+  if (!adminToken) return;
+  setAdminLoading(true);
+  setAdminStatus({ type: '', message: '' });
+
+  try {
+    const response = await fetch(`${CONFIG.WORKER_URL}/pending`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data?.error || 'Yetkisiz erişim.');
+    }
+
+    setPendingItems(data.data || []);
+  } catch (err) {
+    setAdminStatus({ type: 'error', message: err.message || 'Admin panel hatası.' });
+  } finally {
+    setAdminLoading(false);
+  }
+}, [adminToken]);
+
+useEffect(() => {
+  const isAdmin = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+  if (isAdmin && adminToken) {
+    fetchPending();
+  }
+}, [adminToken, fetchPending]);
+
+const saveAdminToken = () => {
+  if (typeof window !== 'undefined') {
+    window.localStorage.setItem('ih_admin_token', adminToken);
+  }
+  setAdminStatus({ type: 'ok', message: 'Token kaydedildi.' });
+};
+
+const approvePending = async (id) => {
+  if (!adminToken) return;
+  setAdminLoading(true);
+  try {
+    const response = await fetch(`${CONFIG.WORKER_URL}/pending/approve`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ id }),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data?.error || 'Onay başarısız.');
+    }
+    setAdminStatus({ type: 'ok', message: 'Kayıt onaylandı.' });
+    await fetchPending();
+  } catch (err) {
+    setAdminStatus({ type: 'error', message: err.message || 'Onay hatası.' });
+  } finally {
+    setAdminLoading(false);
+  }
+};
+
+const rejectPending = async (id) => {
+  if (!adminToken) return;
+  setAdminLoading(true);
+  try {
+    const response = await fetch(`${CONFIG.WORKER_URL}/pending/reject`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({ id }),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.success) {
+      throw new Error(data?.error || 'Reddetme başarısız.');
+    }
+    setAdminStatus({ type: 'ok', message: 'Kayıt reddedildi.' });
+    await fetchPending();
+  } catch (err) {
+    setAdminStatus({ type: 'error', message: err.message || 'Reddetme hatası.' });
+  } finally {
+    setAdminLoading(false);
+  }
+};
+
+
 const countdownCells = useMemo(
   () => [
     { label: 'GÜN', val: String(countdown.d).padStart(2, '0') },
@@ -207,6 +390,8 @@ const istatistikler = useMemo(() => {
     katilimciSayisi: katilimciSeti.size,
   };
 }, [iyilikler]);
+
+const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
 
 const submit = async (e) => {
 
@@ -722,6 +907,80 @@ const submit = async (e) => {
   color: #f8fafc;
 }
 
+.admin-shell {
+  padding-top: 12px;
+}
+
+.admin-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.admin-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.admin-auth { grid-column: span 4; }
+.admin-pending { grid-column: span 8; }
+
+.admin-note {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #8ea0be;
+}
+
+.admin-refresh {
+  width: auto;
+  padding: 10px 18px;
+}
+
+.pending-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pending-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+}
+
+.pending-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.pending-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-ghost {
+  background: rgba(255,255,255,0.08);
+  color: #e2e8f0;
+}
+
+.btn-ghost:hover {
+  background: rgba(255,255,255,0.16);
+}
+
+@media (max-width: 1024px) {
+  .admin-auth, .admin-pending { grid-column: span 12; }
+}
+
 .footer {
 
           margin-top: 48px;
@@ -748,7 +1007,20 @@ const submit = async (e) => {
       <div className="orb orb-a" />
       <div className="orb orb-b" />
 
-      <main className="container">
+{isAdminRoute ? (
+  <AdminPanel
+    token={adminToken}
+    onTokenChange={setAdminToken}
+    onSaveToken={saveAdminToken}
+    pending={pendingItems}
+    loading={adminLoading}
+    status={adminStatus}
+    onRefresh={fetchPending}
+    onApprove={approvePending}
+    onReject={rejectPending}
+  />
+) : (
+  <main className="container">
         <div className="topbar">
           <div>
             <h1 className="title">
@@ -904,6 +1176,7 @@ const submit = async (e) => {
 
         <footer className="footer">İyilikle Kalın • 2026</footer>
       </main>
+      )}
     </div>
   );
 }
