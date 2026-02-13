@@ -59,7 +59,7 @@ function formatAgo(value) {
   return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
 }
 
-export default function RamazanPremiumUI() {
+function RamazanPremiumUIInner() {
   const [time, setTime] = useState(new Date());
   const [targetDate] = useState(getTargetRamadanDate);
   const [countdown, setCountdown] = useState(() => getCountdownParts(getTargetRamadanDate()));
@@ -668,5 +668,72 @@ export default function RamazanPremiumUI() {
         <footer className="footer">Iyilikle Kalin • 2026</footer>
       </main>
     </div>
+  );
+}
+
+class UIErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, message: '' };
+  }
+
+  static getDerivedStateFromError(error) {
+    return {
+      hasError: true,
+      message: error?.message || 'Bilinmeyen hata',
+    };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('UI runtime error:', error, info);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{
+          minHeight: '100vh',
+          display: 'grid',
+          placeItems: 'center',
+          background: '#020617',
+          color: '#e2e8f0',
+          padding: '24px',
+          fontFamily: 'sans-serif',
+        }}>
+          <div style={{
+            maxWidth: '760px',
+            width: '100%',
+            border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '16px',
+            padding: '20px',
+            background: 'rgba(255,255,255,0.04)',
+          }}>
+            <h2 style={{ marginTop: 0 }}>UI Hatası Yakalandı</h2>
+            <p style={{ opacity: 0.85 }}>
+              Sayfa boş görünmesin diye hata yakalandı. Lütfen ekran görüntüsü ile bu mesajı paylaş.
+            </p>
+            <pre style={{
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              background: '#0b1220',
+              borderRadius: '10px',
+              padding: '12px',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#fda4af',
+            }}>{this.state.message}</pre>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+export default function RamazanPremiumUI() {
+  return (
+    <UIErrorBoundary>
+      <RamazanPremiumUIInner />
+    </UIErrorBoundary>
   );
 }
