@@ -1,59 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { CONFIG } from './config';
 
-function getNextRamadanDate() {
-  const now = new Date();
-  const base = new Date(CONFIG.RAMAZAN_START);
-  if (Number.isNaN(base.getTime())) return null;
-
-  const candidate = new Date(base);
-  candidate.setFullYear(now.getFullYear());
-
-  if (candidate <= now) {
-    candidate.setFullYear(now.getFullYear() + 1);
-  }
-
-  return candidate;
-}
-
-function formatClock(date) {
-  return date.toLocaleTimeString('tr-TR', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-}
-
-function formatDate(date) {
-  return date.toLocaleDateString('tr-TR', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
-
-function timeAgo(value) {
-  const date = new Date(value);
-  const diffMs = Date.now() - date.getTime();
-  const min = Math.floor(diffMs / 60000);
-
-  if (min < 1) return 'şimdi';
-  if (min < 60) return `${min} dk önce`;
-
-  const hours = Math.floor(min / 60);
-  if (hours < 24) return `${hours} sa önce`;
-
-  return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
-}
-
-function countdownParts(target) {
-  if (!target) return null;
-
+function getCountdownParts(targetDate) {
   const now = Date.now();
-  const diff = target.getTime() - now;
-  if (diff <= 0) return { done: true, d: 0, h: 0, m: 0, s: 0 };
+  const diff = targetDate.getTime() - now;
+
+  if (diff <= 0) {
+    return { done: true, d: 0, h: 0, m: 0, s: 0 };
+  }
 
   return {
     done: false,
@@ -64,75 +18,92 @@ function countdownParts(target) {
   };
 }
 
-function getRankMedal(rank) {
-  if (rank === 0) return '🥇';
-  if (rank === 1) return '🥈';
-  if (rank === 2) return '🥉';
-  return '•';
+function getTargetRamadanDate() {
+  const base = new Date(CONFIG.RAMAZAN_START);
+  if (Number.isNaN(base.getTime())) return new Date();
+
+  const now = new Date();
+  const candidate = new Date(base);
+  candidate.setFullYear(now.getFullYear());
+
+  if (candidate <= now) {
+    candidate.setFullYear(now.getFullYear() + 1);
+  }
+
+  return candidate;
 }
 
-export default function App() {
-  const [now, setNow] = useState(new Date());
-  const [targetDate] = useState(getNextRamadanDate);
-  const [countdown, setCountdown] = useState(() => countdownParts(getNextRamadanDate()));
+function formatAgo(value) {
+  const date = new Date(value);
+  const diffMs = Date.now() - date.getTime();
+  const min = Math.floor(diffMs / 60000);
 
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  if (min < 1) return 'simdi';
+  if (min < 60) return `${min} dk once`;
+
+  const hours = Math.floor(min / 60);
+  if (hours < 24) return `${hours} sa once`;
+
+  return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
+}
+
+export default function RamazanPremiumUI() {
+  const [time, setTime] = useState(new Date());
+  const [targetDate] = useState(getTargetRamadanDate);
+  const [countdown, setCountdown] = useState(() => getCountdownParts(getTargetRamadanDate()));
+
+  const [iyilikler, setIyilikler] = useState([]);
+  const [form, setForm] = useState({ isim: '', soyisim: '', iyilik: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const [form, setForm] = useState({ isim: '', soyisim: '', iyilik: '' });
-
-  const leaderboard = useMemo(() => {
-    const counts = {};
-    for (const item of items) {
-      const key = `${item.isim} ${item.soyisim}`;
-      counts[key] = (counts[key] || 0) + 1;
-    }
-
-    return Object.entries(counts)
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-  }, [items]);
-
-  const fetchItems = useCallback(async () => {
+  const fetchIyilikler = useCallback(async () => {
     try {
-      const res = await fetch(`${CONFIG.WORKER_URL}/iyilikler`);
-      const data = await res.json();
+      const response = await fetch(`${CONFIG.WORKER_URL}/iyilikler`);
+      const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || 'Liste alınamadı.');
+        throw new Error(data.error || 'Liste alinamadi.');
       }
 
       const sorted = [...(data.data || [])].sort(
         (a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime()
       );
 
-      setItems(sorted);
+      setIyilikler(sorted);
     } catch (e) {
-      setError(e.message || 'Bağlantı hatası.');
+      setError(e.message || 'Baglanti hatasi.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchItems();
-    const poll = setInterval(fetchItems, 25000);
+    fetchIyilikler();
+    const poll = setInterval(fetchIyilikler, 25000);
     return () => clearInterval(poll);
-  }, [fetchItems]);
+  }, [fetchIyilikler]);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const nextNow = new Date();
-      setNow(nextNow);
-      setCountdown(countdownParts(targetDate));
+      setTime(new Date());
+      setCountdown(getCountdownParts(targetDate));
     }, 1000);
 
     return () => clearInterval(timer);
   }, [targetDate]);
+
+  const countdownCells = useMemo(
+    () => [
+      { label: 'GUN', val: String(countdown.d).padStart(2, '0') },
+      { label: 'SAAT', val: String(countdown.h).padStart(2, '0') },
+      { label: 'DAKIKA', val: String(countdown.m).padStart(2, '0') },
+      { label: 'SANIYE', val: String(countdown.s).padStart(2, '0') },
+    ],
+    [countdown]
+  );
 
   const submit = async (e) => {
     e.preventDefault();
@@ -144,7 +115,7 @@ export default function App() {
     const iyilik = form.iyilik.trim();
 
     if (!isim || !soyisim || !iyilik) {
-      setError('Lütfen tüm alanları doldur.');
+      setError('Tum alanlari doldur.');
       return;
     }
 
@@ -153,676 +124,537 @@ export default function App() {
       return;
     }
 
-    setSubmitting(true);
+    setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${CONFIG.WORKER_URL}/iyilikler`, {
+      const response = await fetch(`${CONFIG.WORKER_URL}/iyilikler`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isim, soyisim, iyilik }),
       });
 
-      const data = await res.json();
+      const data = await response.json();
+
       if (!data.success) {
-        const msg = data.detail ? `${data.error} (${data.detail})` : data.error;
-        throw new Error(msg || 'Kayıt sırasında hata oluştu.');
+        const message = data.detail ? `${data.error} (${data.detail})` : data.error;
+        throw new Error(message || 'Kayit hatasi.');
       }
 
       setForm({ isim: '', soyisim: '', iyilik: '' });
-      setSuccess(data.pending ? 'İçerik onaya gönderildi.' : 'İyilik kaydedildi.');
-      await fetchItems();
+      setSuccess(data.pending ? 'Icerik onaya gonderildi.' : 'Iyilik kaydedildi.');
+      await fetchIyilikler();
     } catch (e) {
-      setError(e.message || 'Bağlantı hatası.');
+      setError(e.message || 'Baglanti hatasi.');
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="page">
+    <div className="ramazan-ui">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Marcellus&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
 
         :root {
-          --bg: #eef4ff;
-          --ink-900: #17283e;
-          --ink-700: #3f536f;
-          --ink-500: #637790;
-          --line: rgba(39, 64, 98, 0.16);
-          --glass: rgba(255, 255, 255, 0.66);
-          --glass-strong: rgba(255, 255, 255, 0.86);
-          --brand: #2e63c8;
-          --brand-2: #5a90eb;
-          --ok: #128d54;
-          --danger: #bf2e40;
-          --shadow: 0 24px 70px rgba(27, 52, 89, 0.13);
+          --bg: #020617;
+          --card: rgba(255, 255, 255, 0.03);
+          --line: rgba(255, 255, 255, 0.08);
+          --text: #d6deef;
+          --muted: #8ea0be;
+          --gold-1: #f5e6a3;
+          --gold-2: #d4af37;
+          --gold-3: #8a6d1d;
+          --ok: #29d391;
+          --error: #f07189;
         }
 
         * { box-sizing: border-box; }
         html, body { margin: 0; padding: 0; }
 
-        .page {
-          position: relative;
+        .ramazan-ui {
           min-height: 100vh;
-          padding: 20px;
-          color: var(--ink-900);
-          font-family: 'Manrope', sans-serif;
-          background:
-            radial-gradient(1050px 480px at -5% -10%, #dbe8ff 0%, transparent 58%),
-            radial-gradient(900px 420px at 110% -10%, #e8f0ff 0%, transparent 56%),
-            linear-gradient(165deg, #f2f7ff 0%, #edf3ff 46%, #f4f8ff 100%);
+          background: var(--bg);
+          color: var(--text);
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          position: relative;
           overflow-x: hidden;
+          padding: 48px 24px;
         }
 
-        .page::before,
-        .page::after {
-          content: '';
-          position: fixed;
-          width: 240px;
-          aspect-ratio: 1;
-          pointer-events: none;
+        .ramazan-ui::selection {
+          background: rgba(212, 175, 55, 0.3);
+        }
+
+        .orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
           z-index: 0;
-          opacity: 0.25;
-          border: 1px solid rgba(84, 122, 186, 0.35);
-          background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.6), rgba(142, 172, 226, 0.08));
-          clip-path: polygon(50% 0%, 63% 20%, 85% 15%, 80% 37%, 100% 50%, 80% 63%, 85% 85%, 63% 80%, 50% 100%, 37% 80%, 15% 85%, 20% 63%, 0% 50%, 20% 37%, 15% 15%, 37% 20%);
-          animation: motifFloat 11s ease-in-out infinite;
+          pointer-events: none;
         }
 
-        .page::before {
-          top: 58px;
-          left: -70px;
+        .orb-a {
+          width: 500px;
+          height: 500px;
+          background: rgba(30, 58, 138, 0.2);
+          top: -80px;
+          left: -80px;
         }
 
-        .page::after {
-          width: 170px;
-          right: -36px;
-          bottom: 42px;
-          animation-delay: 1.8s;
-          animation-duration: 13s;
+        .orb-b {
+          width: 400px;
+          height: 400px;
+          background: rgba(120, 53, 15, 0.22);
+          right: 40px;
+          bottom: 40px;
         }
 
-        @keyframes motifFloat {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-10px) rotate(2deg); }
-        }
-
-        .app {
+        .container {
           position: relative;
           z-index: 1;
-          max-width: 1220px;
+          max-width: 1280px;
           margin: 0 auto;
-          display: grid;
-          gap: 14px;
         }
 
-        .glass {
-          border: 1px solid var(--line);
-          border-radius: 20px;
-          background: var(--glass);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          box-shadow: var(--shadow);
-        }
-
-        .hero {
-          padding: 18px;
-          display: grid;
-          grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
-          gap: 14px;
-          align-items: stretch;
-        }
-
-        .hero-left {
-          display: grid;
-          gap: 12px;
-        }
-
-        .brand {
+        .topbar {
           display: flex;
-          align-items: center;
           justify-content: space-between;
-          gap: 12px;
-          padding: 14px;
-          border-radius: 16px;
-          background: var(--glass-strong);
-          border: 1px solid var(--line);
+          align-items: flex-end;
+          gap: 32px;
+          margin-bottom: 42px;
+          flex-wrap: wrap;
         }
 
-        .title-wrap h1 {
+        .title {
+          font-size: clamp(40px, 6vw, 72px);
+          line-height: 1;
+          font-weight: 800;
+          margin: 0 0 10px;
+          letter-spacing: -0.02em;
+        }
+
+        .gold {
+          background: linear-gradient(135deg, var(--gold-1) 0%, var(--gold-2) 50%, var(--gold-3) 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        .sub {
           margin: 0;
-          font-family: 'Marcellus', serif;
-          font-size: clamp(32px, 4.2vw, 52px);
-          line-height: 0.95;
-          letter-spacing: 0.2px;
+          color: #7f8ba3;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          font-size: 11px;
+          font-weight: 800;
         }
 
-        .title-wrap p {
-          margin: 8px 0 0;
-          color: var(--ink-500);
-          font-size: 13px;
-          font-weight: 600;
-          letter-spacing: 0.3px;
+        .time-wrap {
+          text-align: right;
         }
 
         .clock {
-          min-width: 230px;
-          text-align: right;
-          border-left: 1px solid var(--line);
-          padding-left: 14px;
-        }
-
-        .clock-time {
-          font-size: clamp(22px, 3.2vw, 36px);
-          font-weight: 800;
+          font-size: clamp(32px, 4vw, 56px);
+          font-weight: 300;
+          letter-spacing: -0.03em;
+          color: rgba(255,255,255,0.92);
           line-height: 1;
-          color: var(--ink-900);
-          font-variant-numeric: tabular-nums;
         }
 
-        .clock-date {
+        .date {
           margin-top: 6px;
-          font-size: 12px;
-          font-weight: 600;
-          color: var(--ink-700);
-          text-transform: capitalize;
-        }
-
-        .countdown {
-          position: relative;
-          overflow: hidden;
-          padding: 14px;
-          border: 1px solid var(--line);
-          border-radius: 16px;
-          background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(242, 248, 255, 0.62));
-        }
-
-        .countdown::before {
-          content: '☾';
-          position: absolute;
-          right: 16px;
-          top: 12px;
-          color: rgba(46, 99, 200, 0.16);
-          font-size: 30px;
-          line-height: 1;
-        }
-
-        .countdown-label {
-          margin: 0 0 11px;
-          color: var(--ink-700);
-          font-size: 13px;
+          color: rgba(212, 175, 55, 0.65);
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          font-size: 11px;
           font-weight: 700;
         }
 
-        .timer {
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(12, minmax(0, 1fr));
+          gap: 24px;
+        }
+
+        .glass-card {
+          background: var(--card);
+          backdrop-filter: blur(20px);
+          border: 1px solid var(--line);
+          border-radius: 28px;
+          padding: 28px;
+          transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border-color: rgba(212, 175, 55, 0.22);
+          transform: translateY(-4px);
+        }
+
+        .countdown { grid-column: span 8; }
+        .niyet { grid-column: span 4; }
+        .form-card { grid-column: span 4; }
+        .flow-card { grid-column: span 8; }
+
+        .label-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 18px;
+        }
+
+        .dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 99px;
+          background: #f59e0b;
+        }
+
+        .micro {
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.2em;
+          color: #96a1b8;
+          font-weight: 700;
+        }
+
+        .count-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
-          gap: 8px;
-        }
-
-        .timer-unit {
-          border-radius: 12px;
-          border: 1px solid var(--line);
-          background: rgba(255, 255, 255, 0.82);
-          text-align: center;
-          padding: 10px 4px;
-          animation: raise .45s ease both;
-        }
-
-        .timer-unit:nth-child(2) { animation-delay: .08s; }
-        .timer-unit:nth-child(3) { animation-delay: .16s; }
-        .timer-unit:nth-child(4) { animation-delay: .24s; }
-
-        @keyframes raise {
-          from { opacity: 0; transform: translateY(9px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .timer-value {
-          font-size: clamp(20px, 2.5vw, 30px);
-          line-height: 1;
-          font-weight: 800;
-          color: var(--ink-900);
-          font-variant-numeric: tabular-nums;
-        }
-
-        .timer-name {
-          margin-top: 4px;
-          font-size: 11px;
-          color: var(--ink-500);
-          font-weight: 700;
-          letter-spacing: 0.4px;
-          text-transform: uppercase;
-        }
-
-        .hero-right {
-          border: 1px solid var(--line);
-          border-radius: 16px;
-          background: linear-gradient(150deg, rgba(53, 99, 179, 0.93), rgba(33, 70, 136, 0.9));
-          color: #f3f8ff;
-          padding: 15px;
-          display: grid;
-          align-content: center;
-          gap: 8px;
-        }
-
-        .quote-label {
-          font-size: 12px;
-          letter-spacing: 0.4px;
-          text-transform: uppercase;
-          opacity: 0.78;
-          font-weight: 700;
-        }
-
-        .quote {
-          font-family: 'Marcellus', serif;
-          font-size: clamp(22px, 2.6vw, 33px);
-          line-height: 1.2;
-          letter-spacing: 0.2px;
-          margin: 0;
-        }
-
-        .quote-note {
-          font-size: 13px;
-          color: rgba(234, 243, 255, 0.88);
-          margin: 0;
-          max-width: 35ch;
-        }
-
-        .content {
-          display: grid;
-          grid-template-columns: 370px minmax(0, 1fr);
           gap: 14px;
-          align-items: start;
         }
 
-        .composer {
-          position: sticky;
-          top: 16px;
-          padding: 16px;
-        }
-
-        .composer h2,
-        .feed-head h2 {
-          margin: 0;
-          font-family: 'Marcellus', serif;
-          font-size: 30px;
-          letter-spacing: 0.2px;
-        }
-
-        .composer-sub {
-          margin: 7px 0 14px;
-          font-size: 13px;
-          color: var(--ink-700);
-          font-weight: 600;
-        }
-
-        .field {
-          margin-bottom: 10px;
-        }
-
-        .field label {
+        .count-item strong {
           display: block;
-          margin-bottom: 6px;
-          font-size: 12px;
-          color: var(--ink-700);
+          font-size: clamp(36px, 5vw, 72px);
+          line-height: 1;
+          color: rgba(255,255,255,0.94);
+          margin-bottom: 4px;
+        }
+
+        .count-item span {
+          font-size: 10px;
+          letter-spacing: 0.2em;
+          color: #6f7f9b;
           font-weight: 700;
-          letter-spacing: 0.2px;
+        }
+
+        .niyet {
+          background: linear-gradient(140deg, #d6ab51, #a57422);
+          color: #1f1b12;
+          box-shadow: 0 20px 35px rgba(110, 71, 13, 0.32);
+        }
+
+        .niyet h3 {
+          margin: 0 0 14px;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.16em;
+          opacity: 0.7;
+        }
+
+        .niyet p {
+          margin: 0;
+          font-size: clamp(24px, 3vw, 34px);
+          line-height: 1.2;
+          font-weight: 800;
+        }
+
+        .niyet .line {
+          margin-top: 26px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 11px;
+          text-transform: uppercase;
+          letter-spacing: 0.14em;
+          font-weight: 700;
+        }
+
+        .niyet .line::before {
+          content: '';
+          width: 28px;
+          height: 1px;
+          background: rgba(32, 24, 12, 0.35);
+        }
+
+        .section-title {
+          margin: 0 0 18px;
+          font-size: 30px;
+          font-weight: 800;
+          color: rgba(255,255,255,0.95);
+          letter-spacing: -0.02em;
+        }
+
+        .fields {
+          display: grid;
+          gap: 12px;
         }
 
         .input,
         .textarea {
           width: 100%;
-          border-radius: 12px;
-          border: 1px solid var(--line);
-          background: rgba(255, 255, 255, 0.92);
-          color: var(--ink-900);
+          border-radius: 16px;
+          border: 1px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.05);
+          color: rgba(236,242,255,0.95);
           font: inherit;
-          padding: 11px 12px;
+          font-size: 14px;
+          padding: 14px 16px;
           outline: none;
-          transition: border-color .18s ease, box-shadow .18s ease;
+          transition: border-color .2s ease;
         }
+
+        .input::placeholder,
+        .textarea::placeholder { color: #8ea0be; }
 
         .input:focus,
         .textarea:focus {
-          border-color: rgba(46, 99, 200, 0.62);
-          box-shadow: 0 0 0 3px rgba(87, 137, 228, 0.18);
+          border-color: rgba(212, 175, 55, 0.45);
         }
 
-        .textarea {
-          min-height: 112px;
-          resize: vertical;
-        }
+        .textarea { resize: none; min-height: 110px; }
 
-        .submit {
+        .btn {
           width: 100%;
           border: 0;
-          border-radius: 12px;
-          padding: 11px 14px;
-          background: linear-gradient(130deg, var(--brand), var(--brand-2));
-          color: #fff;
-          font-weight: 800;
-          letter-spacing: 0.2px;
-          cursor: pointer;
-          transition: transform .18s ease, box-shadow .18s ease;
-        }
-
-        .submit:hover {
-          transform: translateY(-1px);
-          box-shadow: 0 10px 28px rgba(34, 81, 156, 0.26);
-        }
-
-        .submit:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-          transform: none;
-          box-shadow: none;
-        }
-
-        .message {
-          margin-top: 9px;
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .message.error { color: var(--danger); }
-        .message.success { color: var(--ok); }
-
-        .feed {
+          border-radius: 16px;
           padding: 14px;
-        }
-
-        .feed-head {
-          display: flex;
-          align-items: flex-start;
-          justify-content: space-between;
-          gap: 10px;
-          margin-bottom: 10px;
-        }
-
-        .feed-count {
-          margin-top: 8px;
-          color: var(--ink-700);
-          font-size: 12px;
-          font-weight: 700;
-        }
-
-        .leaderboard {
-          display: flex;
-          flex-wrap: wrap;
-          justify-content: flex-end;
-          gap: 7px;
-          max-width: 52%;
-        }
-
-        .leader-pill {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          border: 1px solid var(--line);
-          border-radius: 999px;
-          padding: 6px 10px;
-          background: rgba(255, 255, 255, 0.88);
-          font-size: 12px;
-          font-weight: 700;
-          color: var(--ink-700);
-          white-space: nowrap;
-        }
-
-        .leader-pill strong {
-          color: var(--brand);
-        }
-
-        .stream {
-          border-top: 1px solid var(--line);
-          max-height: 645px;
-          overflow-y: auto;
-        }
-
-        .entry {
-          display: grid;
-          grid-template-columns: 1fr auto;
-          gap: 12px;
-          padding: 12px 2px;
-          border-bottom: 1px solid var(--line);
-          animation: fadeUp .34s ease both;
-        }
-
-        @keyframes fadeUp {
-          from { opacity: 0; transform: translateY(6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .entry-top {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          margin-bottom: 3px;
-        }
-
-        .dot {
-          width: 7px;
-          height: 7px;
-          border-radius: 999px;
-          background: rgba(46, 99, 200, 0.7);
-          box-shadow: 0 0 0 4px rgba(46, 99, 200, 0.14);
-          flex: 0 0 auto;
-        }
-
-        .name {
+          background: #f8fafc;
+          color: #0f172a;
           font-size: 14px;
           font-weight: 800;
-          color: var(--ink-900);
+          cursor: pointer;
+          transition: background .2s ease;
         }
 
-        .text {
-          color: #334a66;
-          font-size: 14px;
-          line-height: 1.5;
-        }
+        .btn:hover { background: #f4d27a; }
+        .btn:disabled { opacity: 0.7; cursor: not-allowed; }
 
-        .ago {
+        .status {
           font-size: 12px;
-          font-weight: 700;
-          color: var(--ink-500);
-          white-space: nowrap;
-          padding-top: 2px;
-        }
-
-        .empty {
-          padding: 20px 0;
-          color: var(--ink-500);
-          font-size: 14px;
+          margin-top: 8px;
           font-weight: 600;
         }
 
-        .feed-motif {
-          position: absolute;
-          right: 16px;
-          bottom: 16px;
-          width: 78px;
-          aspect-ratio: 1;
-          border-radius: 999px;
-          border: 1px solid rgba(76, 112, 168, 0.24);
-          background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), rgba(155,184,232,0.15));
-          opacity: 0.5;
-          pointer-events: none;
+        .status.error { color: var(--error); }
+        .status.ok { color: var(--ok); }
+
+        .flow-head {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 16px;
+          gap: 12px;
+          flex-wrap: wrap;
         }
 
-        @media (max-width: 1060px) {
-          .hero {
-            grid-template-columns: 1fr;
+        .pill {
+          font-size: 10px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: #94a3b8;
+          border: 1px solid rgba(255,255,255,0.12);
+          border-radius: 999px;
+          padding: 6px 10px;
+          font-weight: 700;
+        }
+
+        .list {
+          display: grid;
+          gap: 10px;
+        }
+
+        .item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          padding: 18px;
+          border-radius: 20px;
+          border: 1px solid rgba(255,255,255,0.07);
+          background: rgba(255,255,255,0.02);
+        }
+
+        .item-left {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          min-width: 0;
+        }
+
+        .avatar {
+          width: 46px;
+          height: 46px;
+          border-radius: 50%;
+          background: linear-gradient(145deg, #3b82f6, #f59e0b);
+          display: grid;
+          place-items: center;
+          color: #fff;
+          font-weight: 800;
+          flex: 0 0 auto;
+        }
+
+        .item-name {
+          font-size: 15px;
+          font-weight: 800;
+          color: #f1f5f9;
+          margin-bottom: 2px;
+        }
+
+        .item-text {
+          font-size: 14px;
+          color: #94a3b8;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 520px;
+        }
+
+        .item-time {
+          font-size: 10px;
+          letter-spacing: 0.13em;
+          text-transform: uppercase;
+          color: #64748b;
+          font-weight: 700;
+          flex: 0 0 auto;
+        }
+
+        .empty {
+          color: #94a3b8;
+          font-size: 13px;
+          font-weight: 600;
+          padding: 8px 0;
+        }
+
+        .footer {
+          margin-top: 48px;
+          text-align: center;
+          opacity: 0.35;
+          font-size: 10px;
+          letter-spacing: 0.5em;
+          text-transform: uppercase;
+          font-weight: 700;
+          color: #b7c2d7;
+        }
+
+        @media (max-width: 1024px) {
+          .countdown, .niyet, .form-card, .flow-card {
+            grid-column: span 12;
           }
 
-          .clock {
-            border-left: 0;
-            border-top: 1px solid var(--line);
-            padding-left: 0;
-            padding-top: 10px;
-            text-align: left;
-            min-width: 0;
-          }
-
-          .content {
-            grid-template-columns: 1fr;
-          }
-
-          .composer {
-            position: static;
-          }
-
-          .leaderboard {
-            max-width: none;
-            justify-content: flex-start;
-          }
-
-          .stream {
-            max-height: 520px;
-          }
+          .count-item strong { font-size: 44px; }
         }
       `}</style>
 
-      <div className="app">
-        <section className="hero glass">
-          <div className="hero-left">
-            <div className="brand">
-              <div className="title-wrap">
-                <h1>İyilik Hareketi</h1>
-                <p>Ramazan boyunca iyilikleri büyüten ortak akış</p>
-              </div>
+      <div className="orb orb-a" />
+      <div className="orb orb-b" />
 
-              <div className="clock">
-                <div className="clock-time">{formatClock(now)}</div>
-                <div className="clock-date">{formatDate(now)}</div>
-              </div>
-            </div>
-
-            <div className="countdown">
-              <p className="countdown-label">
-                {countdown?.done
-                  ? 'Ramazan başladı. Hayırlı Ramazanlar.'
-                  : `Ramazan'a kalan süre (${targetDate ? targetDate.toLocaleDateString('tr-TR') : '-'})`}
-              </p>
-
-              {!countdown?.done && countdown && (
-                <div className="timer">
-                  <div className="timer-unit">
-                    <div className="timer-value">{String(countdown.d).padStart(2, '0')}</div>
-                    <div className="timer-name">Gün</div>
-                  </div>
-                  <div className="timer-unit">
-                    <div className="timer-value">{String(countdown.h).padStart(2, '0')}</div>
-                    <div className="timer-name">Saat</div>
-                  </div>
-                  <div className="timer-unit">
-                    <div className="timer-value">{String(countdown.m).padStart(2, '0')}</div>
-                    <div className="timer-name">Dakika</div>
-                  </div>
-                  <div className="timer-unit">
-                    <div className="timer-value">{String(countdown.s).padStart(2, '0')}</div>
-                    <div className="timer-name">Saniye</div>
-                  </div>
-                </div>
-              )}
-            </div>
+      <main className="container">
+        <div className="topbar">
+          <div>
+            <h1 className="title">
+              Iyilik <span className="gold">Hareketi</span>
+            </h1>
+            <p className="sub">Ramazan 2026 • Topluluk Akişi</p>
           </div>
 
-          <aside className="hero-right">
-            <div className="quote-label">Niyet</div>
-            <p className="quote">Her iyilik yeni bir iyiliğin kapısını açar.</p>
-            <p className="quote-note">Bu akış, yapılan güzel işleri görünür kılarak daha fazla insanı harekete geçirmek için var.</p>
-          </aside>
-        </section>
+          <div className="time-wrap">
+            <div className="clock">
+              {time.toLocaleTimeString('tr-TR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              })}
+            </div>
+            <div className="date">
+              {time.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' })}
+            </div>
+          </div>
+        </div>
 
-        <section className="content">
-          <article className="composer glass">
-            <h2>İyilik Ekle</h2>
-            <p className="composer-sub">Kısa, net ve gerçek bir iyilik cümlesi yaz.</p>
+        <div className="grid">
+          <section className="glass-card countdown">
+            <div className="label-row">
+              <span className="dot" />
+              <span className="micro">Ramazan'a Kalan Sure ({targetDate.toLocaleDateString('tr-TR')})</span>
+            </div>
+            <div className="count-grid">
+              {countdownCells.map((item) => (
+                <div key={item.label} className="count-item">
+                  <strong>{item.val}</strong>
+                  <span>{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </section>
 
-            <form onSubmit={submit}>
-              <div className="field">
-                <label>İsim</label>
-                <input
-                  className="input"
-                  value={form.isim}
-                  onChange={(e) => setForm((prev) => ({ ...prev, isim: e.target.value }))}
-                  placeholder="Adın"
-                />
-              </div>
+          <section className="glass-card niyet">
+            <h3>Gunun Niyeti</h3>
+            <p>"Her iyilik yeni bir iyiligin kapisini acar."</p>
+            <div className="line">Ramazan Ruhu</div>
+          </section>
 
-              <div className="field">
-                <label>Soyisim</label>
-                <input
-                  className="input"
-                  value={form.soyisim}
-                  onChange={(e) => setForm((prev) => ({ ...prev, soyisim: e.target.value }))}
-                  placeholder="Soyadın"
-                />
-              </div>
-
-              <div className="field">
-                <label>Yapılan İyilik</label>
-                <textarea
-                  className="textarea"
-                  value={form.iyilik}
-                  onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
-                  maxLength={CONFIG.MAX_IYILIK_LENGTH}
-                  placeholder="Bugün yaptığın iyiliği yaz"
-                />
-              </div>
-
-              <button className="submit" disabled={submitting} type="submit">
-                {submitting ? 'Kaydediliyor...' : 'Kaydet'}
+          <section className="glass-card form-card">
+            <h3 className="section-title">Iyilik Birak</h3>
+            <form className="fields" onSubmit={submit}>
+              <input
+                className="input"
+                placeholder="Adiniz"
+                value={form.isim}
+                onChange={(e) => setForm((prev) => ({ ...prev, isim: e.target.value }))}
+              />
+              <input
+                className="input"
+                placeholder="Soyisminiz"
+                value={form.soyisim}
+                onChange={(e) => setForm((prev) => ({ ...prev, soyisim: e.target.value }))}
+              />
+              <textarea
+                className="textarea"
+                placeholder="Bugun ne yaptin?"
+                value={form.iyilik}
+                onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
+              />
+              <button className="btn" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Gonderiliyor...' : 'Gonder'}
               </button>
-
-              {error ? <div className="message error">{error}</div> : null}
-              {success ? <div className="message success">{success}</div> : null}
             </form>
-          </article>
 
-          <article className="feed glass" style={{ position: 'relative' }}>
-            <header className="feed-head">
-              <div>
-                <h2>İyilik Akışı</h2>
-                <div className="feed-count">Toplam kayıt: {items.length}</div>
-              </div>
+            {error ? <div className="status error">{error}</div> : null}
+            {success ? <div className="status ok">{success}</div> : null}
+          </section>
 
-              <div className="leaderboard">
-                {leaderboard.map((person, index) => (
-                  <div className="leader-pill" key={person.name}>
-                    <span>{getRankMedal(index)}</span>
-                    <span>{person.name}</span>
-                    <strong>{person.count}</strong>
-                  </div>
-                ))}
-              </div>
-            </header>
+          <section className="glass-card flow-card">
+            <div className="flow-head">
+              <h3 className="section-title">Iyilik Akisi</h3>
+              <span className="pill">{iyilikler.length} Paylasim</span>
+            </div>
 
-            <div className="stream">
-              {loading ? (
-                <div className="empty">Yükleniyor...</div>
-              ) : items.length === 0 ? (
-                <div className="empty">Henüz kayıt yok. İlk iyiliği sen ekle.</div>
+            <div className="list">
+              {isLoading ? (
+                <div className="empty">Yukleniyor...</div>
+              ) : iyilikler.length === 0 ? (
+                <div className="empty">Henuz paylasim yok.</div>
               ) : (
-                items.map((item) => (
-                  <article className="entry" key={item.id}>
-                    <div>
-                      <div className="entry-top">
-                        <span className="dot" />
-                        <div className="name">{item.isim} {item.soyisim}</div>
+                iyilikler.map((i) => (
+                  <div key={i.id} className="item">
+                    <div className="item-left">
+                      <div className="avatar">{getInitials(i.isim, i.soyisim)}</div>
+                      <div>
+                        <div className="item-name">{i.isim} {i.soyisim}</div>
+                        <div className="item-text">{i.iyilik}</div>
                       </div>
-                      <div className="text">{item.iyilik}</div>
                     </div>
-                    <div className="ago">{timeAgo(item.tarih)}</div>
-                  </article>
+                    <div className="item-time">{formatAgo(i.tarih)}</div>
+                  </div>
                 ))
               )}
             </div>
+          </section>
+        </div>
 
-            <div className="feed-motif" />
-          </article>
-        </section>
-      </div>
+        <footer className="footer">Iyilikle Kalin • 2026</footer>
+      </main>
     </div>
   );
 }
