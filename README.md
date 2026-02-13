@@ -1,15 +1,40 @@
-# 🌙 İyilik Hareketi - Kurulum Rehberi
+# Iyilik Hareketi
 
-## 📁 Proje Yapısı
+Ramazan ayının dayanışma ruhunu dijital bir alana taşıyan, topluluk odaklı bir iyilik takip platformu.
 
-```
+İnsanlar yaptıkları iyilikleri isim ve kısa açıklama ile paylaşır; kayıtlar herkese açık listede en yeni üstte görünecek şekilde akar. Amaç yalnızca kayıt tutmak değil, iyiliği görünür kılarak daha fazla kişiyi harekete geçirmektir.
+
+## Neden önemli?
+
+- İyilik davranışını görünür hale getirir.
+- Topluluk içinde olumlu örnek etkisi oluşturur.
+- Ramazan ruhuna uygun şekilde yardımlaşmayı teşvik eder.
+- Küçük adımların birikerek büyük sosyal etki üretebileceğini hatırlatır.
+
+## Özellikler
+
+- Dijital saat ve Ramazan geri sayımı
+- İsim, soyisim ve iyilik metni ile kayıt
+- En yeni kaydın üstte kaldığı akış listesi
+- En çok iyilik yapanlar leaderboard alanı
+- Basit anti-spam koruması
+- Uygunsuz içerik için temel filtreleme
+
+## Teknoloji
+
+- Frontend: React + Vite
+- API: Cloudflare Worker
+- Veri katmanı: Upstash Redis
+
+## Proje yapısı
+
+```text
 iyilik-hareketi/
 ├── frontend/
-│   ├── index.html
 │   ├── src/
 │   │   ├── App.jsx
-│   │   ├── main.jsx
-│   │   └── config.js
+│   │   ├── config.js
+│   │   └── main.jsx
 │   ├── package.json
 │   └── vite.config.js
 ├── worker/
@@ -19,139 +44,81 @@ iyilik-hareketi/
 └── README.md
 ```
 
----
+## Hızlı kurulum
 
-## 🚀 ADIM 1: Upstash Redis Kurulumu (2 dakika)
+### 1) Upstash Redis
 
-1. **https://console.upstash.com** adresine git
-2. "Create Database" tıkla
-3. Ayarlar:
-   - **Name:** `iyilik-hareketi`
-   - **Region:** `eu-west-1` (Frankfurt - Türkiye'ye yakın)
-   - **Type:** Regional
-4. "Create" tıkla
-5. **REST API** sekmesinden şunları kopyala:
-   - `UPSTASH_REDIS_REST_URL`
-   - `UPSTASH_REDIS_REST_TOKEN`
+1. [Upstash Console](https://console.upstash.com) üzerinden Redis DB oluştur.
+2. `UPSTASH_REDIS_REST_URL` ve `UPSTASH_REDIS_REST_TOKEN` değerlerini al.
 
----
+### 2) Cloudflare Worker
 
-## 🚀 ADIM 2: Cloudflare Worker Kurulumu (5 dakika)
-
-### 2.1 Wrangler CLI Kurulumu
-```bash
-npm install -g wrangler
-wrangler login
-```
-
-### 2.2 Worker Projesini Oluştur
 ```bash
 cd worker
 npm install
-```
-
-### 2.3 Environment Variables Ekle
-```bash
+wrangler login
 wrangler secret put UPSTASH_REDIS_REST_URL
-# Upstash'ten kopyaladığın URL'i yapıştır
-
 wrangler secret put UPSTASH_REDIS_REST_TOKEN
-# Upstash'ten kopyaladığın TOKEN'ı yapıştır
-
-wrangler secret put ANTHROPIC_API_KEY
-# Claude API key'ini yapıştır (isteğe bağlı - AI moderasyon için)
-```
-
-### 2.4 Deploy Et
-```bash
 wrangler deploy
 ```
 
-Çıktıda şöyle bir URL göreceksin:
+Deploy sonrası Worker URL’i örneği:
+
+```text
+https://iyilik-api.<subdomain>.workers.dev
 ```
-https://iyilik-api.YOUR_SUBDOMAIN.workers.dev
-```
 
-Bu URL'i not al!
+### 3) Frontend ayarı
 
----
-
-## 🚀 ADIM 3: Frontend Kurulumu (3 dakika)
-
-### 3.1 Bağımlılıkları Yükle
 ```bash
 cd frontend
 npm install
 ```
 
-### 3.2 Config Dosyasını Düzenle
-`src/config.js` dosyasını aç ve Worker URL'ini yapıştır:
+`frontend/src/config.js` içinde Worker URL’ini güncelle:
 
-```javascript
-export const CONFIG = {
-  WORKER_URL: 'https://iyilik-api.YOUR_SUBDOMAIN.workers.dev',
-  // ...
-};
+```js
+WORKER_URL: 'https://iyilik-api.<subdomain>.workers.dev'
 ```
 
-### 3.3 Test Et
+Lokal çalıştırma:
+
 ```bash
 npm run dev
 ```
 
-Tarayıcıda `http://localhost:5173` adresini aç.
+Build:
 
----
-
-## 🚀 ADIM 4: Production Deploy (Vercel/Netlify)
-
-### Vercel ile:
 ```bash
-npm install -g vercel
-cd frontend
-vercel
-```
-
-### Netlify ile:
-```bash
-npm install -g netlify-cli
-cd frontend
 npm run build
-netlify deploy --prod --dir=dist
 ```
 
----
+## Deploy
 
-## ✅ Test Checklist
+### Netlify (önerilen hızlı yol)
 
-- [ ] Upstash console'da database oluşturuldu
-- [ ] Worker deploy edildi ve URL alındı
-- [ ] Frontend'de Worker URL güncellendi
-- [ ] İyilik ekleme çalışıyor
-- [ ] Liste güncelleniyor
-- [ ] Leaderboard çalışıyor
-- [ ] Küfür filtresi çalışıyor
+- `frontend/dist` klasörünü [Netlify Drop](https://app.netlify.com/drop) sayfasına sürükle-bırak.
 
----
+### Git tabanlı deploy
 
-## 🔧 Sorun Giderme
+- Netlify üzerinde repo bağla.
+- Base directory: `frontend`
+- Build command: `npm run build`
+- Publish directory: `dist`
 
-### "CORS Error" alıyorsan:
-Worker'da CORS header'ları zaten var, ama sorun devam ederse:
-```javascript
-// worker/index.js içinde headers'a ekle:
-'Access-Control-Allow-Origin': '*'
-```
+## Güvenlik notları
 
-### "Rate Limited" hatası:
-Upstash free tier: 10K istek/gün. Yeterli olmalı.
+- Secret değerleri (`UPSTASH_REDIS_REST_TOKEN` vb.) repoya push edilmemelidir.
+- Secret’ları yalnızca `wrangler secret put` ile tanımlayın.
+- `.env` ve benzeri hassas dosyaları versiyonlamayın.
 
-### Veriler görünmüyor:
-1. Upstash console'dan "Data Browser" aç
-2. `iyilikler` key'ini kontrol et
+## Yol haritası
 
----
+- Admin onay paneli
+- Gelişmiş moderasyon (opsiyonel AI kontrol)
+- Günlük kişi bazlı limit yönetimi
+- İleri seviye raporlama ve istatistikler
 
-## 📞 Destek
+## Lisans
 
-Sorun olursa bana yaz, çözeriz!
+Bu proje kişisel/deneysel kullanım için hazırlanmıştır. Üretim kullanımında uygun lisans ve KVKK gereksinimlerini ayrıca değerlendirin.
