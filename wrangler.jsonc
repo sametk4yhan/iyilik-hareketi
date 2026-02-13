@@ -1,3 +1,4 @@
 {
-  "main": "src/app.jsx",
-  "compatibility_date": "2024-01-01"}
+  "main": "app.jsx",
+  "compatibility_date": "2024-01-01"
+}
