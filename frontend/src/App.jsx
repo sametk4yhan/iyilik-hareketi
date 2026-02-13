@@ -59,6 +59,13 @@ function formatAgo(value) {
   return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
 }
 
+function getInitials(isim, soyisim) {
+  const a = (isim || "").charAt(0);
+  const b = (soyisim || "").charAt(0);
+  const v = (a + b).toUpperCase();
+  return v || "IH";
+}
+
 function RamazanPremiumUIInner() {
   const [time, setTime] = useState(new Date());
   const [targetDate] = useState(getTargetRamadanDate);
