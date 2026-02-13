@@ -219,6 +219,18 @@ export default {
         );
       }
 
+// GET / - API bilgisi
+if (path === '/' && request.method === 'GET') {
+  return new Response(
+    JSON.stringify({
+      success: true,
+      message: 'Iyilik API calisiyor.',
+      endpoints: ['/health', '/gunun-niyeti', '/iyilikler', '/leaderboard', '/stats'],
+    }),
+    { headers: corsHeaders }
+  );
+}
+
 // GET /gunun-niyeti
 if (path === '/gunun-niyeti' && request.method === 'GET') {
   const niyet = getDailyNiyet();
