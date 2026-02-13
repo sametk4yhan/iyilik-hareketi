@@ -33,8 +33,20 @@ function getTargetRamadanDate() {
   return candidate;
 }
 
-function formatAgo(value) {
+function toSafeDate(value) {
   const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function toSafeMs(value) {
+  const date = toSafeDate(value);
+  return date ? date.getTime() : 0;
+}
+
+function formatAgo(value) {
+  const date = toSafeDate(value);
+  if (!date) return 'az once';
+
   const diffMs = Date.now() - date.getTime();
   const min = Math.floor(diffMs / 60000);
 
@@ -69,7 +81,7 @@ export default function RamazanPremiumUI() {
       }
 
       const sorted = [...(data.data || [])].sort(
-        (a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime()
+        (a, b) => toSafeMs(b.tarih) - toSafeMs(a.tarih)
       );
 
       setIyilikler(sorted);
@@ -642,7 +654,7 @@ export default function RamazanPremiumUI() {
                       <div className="avatar">{getInitials(i.isim, i.soyisim)}</div>
                       <div>
                         <div className="item-name">{i.isim} {i.soyisim}</div>
-                        <div className="item-text">{i.iyilik}</div>
+                        <div className="item-text">{i.iyilik || i.metin || '-'}</div>
                       </div>
                     </div>
                     <div className="item-time">{formatAgo(i.tarih)}</div>
