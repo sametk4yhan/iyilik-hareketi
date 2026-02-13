@@ -114,17 +114,69 @@ function RamazanPremiumUIInner() {
     return () => clearInterval(timer);
   }, [targetDate]);
 
-  const countdownCells = useMemo(
-    () => [
-      { label: 'GÜN', val: String(countdown.d).padStart(2, '0') },
-      { label: 'SAAT', val: String(countdown.h).padStart(2, '0') },
-      { label: 'DAKİKA', val: String(countdown.m).padStart(2, '0') },
-      { label: 'SANİYE', val: String(countdown.s).padStart(2, '0') },
-    ],
-    [countdown]
-  );
+const countdownCells = useMemo(
+  () => [
+    { label: 'GÜN', val: String(countdown.d).padStart(2, '0') },
+    { label: 'SAAT', val: String(countdown.h).padStart(2, '0') },
+    { label: 'DAKİKA', val: String(countdown.m).padStart(2, '0') },
+    { label: 'SANİYE', val: String(countdown.s).padStart(2, '0') },
+  ],
+  [countdown]
+);
 
-  const submit = async (e) => {
+const leaderboard = useMemo(() => {
+  const sayac = new Map();
+
+  iyilikler.forEach((item) => {
+    const adSoyad = `${item.isim || ''} ${item.soyisim || ''}`.trim() || 'Anonim';
+    sayac.set(adSoyad, (sayac.get(adSoyad) || 0) + 1);
+  });
+
+  return [...sayac.entries()]
+    .map(([isim, adet]) => ({ isim, adet }))
+    .sort((a, b) => b.adet - a.adet || a.isim.localeCompare(b.isim, 'tr'))
+    .slice(0, 5);
+}, [iyilikler]);
+
+const istatistikler = useMemo(() => {
+  const now = new Date();
+  const ayniGunMu = (a, b) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate();
+
+  const haftaBaslangici = new Date(now);
+  haftaBaslangici.setHours(0, 0, 0, 0);
+  haftaBaslangici.setDate(haftaBaslangici.getDate() - 6);
+
+  let bugunEklenen = 0;
+  let haftalikEklenen = 0;
+  const katilimciSeti = new Set();
+
+  iyilikler.forEach((item) => {
+    const tarih = toSafeDate(item.tarih);
+    const adSoyad = `${item.isim || ''} ${item.soyisim || ''}`.trim() || 'Anonim';
+    katilimciSeti.add(adSoyad);
+
+    if (tarih && ayniGunMu(tarih, now)) {
+      bugunEklenen += 1;
+    }
+
+    if (tarih && tarih >= haftaBaslangici) {
+      haftalikEklenen += 1;
+    }
+  });
+
+  return {
+    bugunEklenen,
+    toplamIyilik: iyilikler.length,
+    haftalikEklenen,
+    katilimciSayisi: katilimciSeti.size,
+  };
+}, [iyilikler]);
+
+const submit = async (e) => {
+
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -309,10 +361,13 @@ function RamazanPremiumUIInner() {
           transform: translateY(-4px);
         }
 
-        .countdown { grid-column: span 8; }
-        .niyet { grid-column: span 4; }
-        .form-card { grid-column: span 4; }
-        .flow-card { grid-column: span 8; }
+.countdown { grid-column: span 8; }
+.niyet { grid-column: span 4; }
+.form-card { grid-column: span 4; }
+.flow-card { grid-column: span 8; }
+.leaderboard-card { grid-column: span 4; }
+.stats-card { grid-column: span 8; }
+
 
         .label-row {
           display: flex;
@@ -538,14 +593,104 @@ function RamazanPremiumUIInner() {
           flex: 0 0 auto;
         }
 
-        .empty {
-          color: #94a3b8;
-          font-size: 13px;
-          font-weight: 600;
-          padding: 8px 0;
-        }
+.empty {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 0;
+}
 
-        .footer {
+.section-title.mini {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.leaderboard-list {
+  display: grid;
+  gap: 10px;
+}
+
+.leader-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+}
+
+.leader-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rank-badge {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #091122;
+  background: linear-gradient(135deg, #f5e6a3, #d4af37);
+  flex: 0 0 auto;
+}
+
+.leader-name {
+  font-size: 14px;
+  color: #e2e8f0;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.leader-count {
+  font-size: 12px;
+  color: #f8fafc;
+  font-weight: 800;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.stat-box {
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(255,255,255,0.02);
+}
+
+.stat-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8ea0be;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+.stat-value {
+  font-size: clamp(24px, 2.5vw, 38px);
+  line-height: 1;
+  font-weight: 800;
+  color: #f8fafc;
+}
+
+.footer {
+
           margin-top: 48px;
           text-align: center;
           opacity: 0.35;
@@ -556,13 +701,15 @@ function RamazanPremiumUIInner() {
           color: #b7c2d7;
         }
 
-        @media (max-width: 1024px) {
-          .countdown, .niyet, .form-card, .flow-card {
-            grid-column: span 12;
-          }
+@media (max-width: 1024px) {
+  .countdown, .niyet, .form-card, .flow-card, .leaderboard-card, .stats-card {
+    grid-column: span 12;
+  }
 
-          .count-item strong { font-size: 44px; }
-        }
+  .count-item strong { font-size: 44px; }
+  .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
       `}</style>
 
       <div className="orb orb-a" />
@@ -574,7 +721,7 @@ function RamazanPremiumUIInner() {
             <h1 className="title">
               İyilik <span className="gold">Hareketi</span>
             </h1>
-            <p className="sub">Ramazan 2026 • Topluluk Akişi</p>
+            <p className="sub">Ramazan 2026 • Topluluk Akışı</p>
           </div>
 
           <div className="time-wrap">
@@ -643,34 +790,84 @@ function RamazanPremiumUIInner() {
             {success ? <div className="status ok">{success}</div> : null}
           </section>
 
-          <section className="glass-card flow-card">
-            <div className="flow-head">
-              <h3 className="section-title">İyilik Akışı</h3>
-              <span className="pill">{iyilikler.length} Paylaşım</span>
-            </div>
+  <section className="glass-card flow-card">
+    <div className="flow-head">
+      <h3 className="section-title">İyilik Akışı</h3>
+      <span className="pill">{iyilikler.length} Paylaşım</span>
+    </div>
 
-            <div className="list">
-              {isLoading ? (
-                <div className="empty">Yükleniyor...</div>
-              ) : iyilikler.length === 0 ? (
-                <div className="empty">Henüz paylaşım yok.</div>
-              ) : (
-                iyilikler.map((i) => (
-                  <div key={i.id} className="item">
-                    <div className="item-left">
-                      <div className="avatar">{getInitials(i.isim, i.soyisim)}</div>
-                      <div>
-                        <div className="item-name">{i.isim} {i.soyisim}</div>
-                        <div className="item-text">{i.iyilik || i.metin || '-'}</div>
-                      </div>
-                    </div>
-                    <div className="item-time">{formatAgo(i.tarih)}</div>
-                  </div>
-                ))
-              )}
+    <div className="list">
+      {isLoading ? (
+        <div className="empty">Yükleniyor...</div>
+      ) : iyilikler.length === 0 ? (
+        <div className="empty">Henüz paylaşım yok.</div>
+      ) : (
+        iyilikler.map((i) => (
+          <div key={i.id} className="item">
+            <div className="item-left">
+              <div className="avatar">{getInitials(i.isim, i.soyisim)}</div>
+              <div>
+                <div className="item-name">{i.isim} {i.soyisim}</div>
+                <div className="item-text">{i.iyilik || i.metin || '-'}</div>
+              </div>
             </div>
-          </section>
-        </div>
+            <div className="item-time">{formatAgo(i.tarih)}</div>
+          </div>
+        ))
+      )}
+    </div>
+  </section>
+
+  <section className="glass-card leaderboard-card">
+    <div className="flow-head">
+      <h3 className="section-title mini">Liderlik Tablosu</h3>
+      <span className="pill">İlk 5</span>
+    </div>
+
+    <div className="leaderboard-list">
+      {leaderboard.length === 0 ? (
+        <div className="empty">Henüz liderlik verisi yok.</div>
+      ) : (
+        leaderboard.map((kisi, index) => (
+          <div key={`${kisi.isim}-${index}`} className="leader-row">
+            <div className="leader-meta">
+              <span className="rank-badge">{index + 1}</span>
+              <span className="leader-name">{kisi.isim}</span>
+            </div>
+            <span className="leader-count">{kisi.adet}</span>
+          </div>
+        ))
+      )}
+    </div>
+  </section>
+
+  <section className="glass-card stats-card">
+    <div className="flow-head">
+      <h3 className="section-title mini">İstatistikler</h3>
+      <span className="pill">Canlı</span>
+    </div>
+
+    <div className="stats-grid">
+      <div className="stat-box">
+        <span className="stat-label">Bugün Eklenen</span>
+        <strong className="stat-value">{istatistikler.bugunEklenen}</strong>
+      </div>
+      <div className="stat-box">
+        <span className="stat-label">Toplam İyilik</span>
+        <strong className="stat-value">{istatistikler.toplamIyilik}</strong>
+      </div>
+      <div className="stat-box">
+        <span className="stat-label">Bu Hafta</span>
+        <strong className="stat-value">{istatistikler.haftalikEklenen}</strong>
+      </div>
+      <div className="stat-box">
+        <span className="stat-label">Katılımcı</span>
+        <strong className="stat-value">{istatistikler.katilimciSayisi}</strong>
+      </div>
+    </div>
+  </section>
+</div>
+
 
         <footer className="footer">İyilikle Kalın • 2026</footer>
       </main>
