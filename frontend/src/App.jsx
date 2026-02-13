@@ -38,15 +38,19 @@ function timeAgo(value) {
   const date = new Date(value);
   const diffMs = Date.now() - date.getTime();
   const min = Math.floor(diffMs / 60000);
+
   if (min < 1) return 'şimdi';
   if (min < 60) return `${min} dk önce`;
+
   const hours = Math.floor(min / 60);
   if (hours < 24) return `${hours} sa önce`;
+
   return date.toLocaleDateString('tr-TR', { day: '2-digit', month: '2-digit' });
 }
 
 function countdownParts(target) {
   if (!target) return null;
+
   const now = Date.now();
   const diff = target.getTime() - now;
   if (diff <= 0) return { done: true, d: 0, h: 0, m: 0, s: 0 };
@@ -58,6 +62,13 @@ function countdownParts(target) {
     m: Math.floor((diff / (1000 * 60)) % 60),
     s: Math.floor((diff / 1000) % 60),
   };
+}
+
+function getRankMedal(rank) {
+  if (rank === 0) return '🥇';
+  if (rank === 1) return '🥈';
+  if (rank === 2) return '🥉';
+  return '•';
 }
 
 export default function App() {
@@ -90,10 +101,15 @@ export default function App() {
     try {
       const res = await fetch(`${CONFIG.WORKER_URL}/iyilikler`);
       const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Liste alınamadı.');
+
+      if (!data.success) {
+        throw new Error(data.error || 'Liste alınamadı.');
+      }
+
       const sorted = [...(data.data || [])].sort(
         (a, b) => new Date(b.tarih).getTime() - new Date(a.tarih).getTime()
       );
+
       setItems(sorted);
     } catch (e) {
       setError(e.message || 'Bağlantı hatası.');
@@ -165,300 +181,571 @@ export default function App() {
   return (
     <div className="page">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=Cormorant+Garamond:wght@600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Marcellus&display=swap');
 
         :root {
-          --bg: #f4f7fb;
-          --card: #ffffff;
-          --line: #dbe4f0;
-          --text: #1f2c3c;
-          --muted: #637289;
-          --primary: #2f6ed8;
-          --primary-soft: #e8f0ff;
-          --danger: #c92d39;
-          --ok: #0c8a4d;
+          --bg: #eef4ff;
+          --ink-900: #17283e;
+          --ink-700: #3f536f;
+          --ink-500: #637790;
+          --line: rgba(39, 64, 98, 0.16);
+          --glass: rgba(255, 255, 255, 0.66);
+          --glass-strong: rgba(255, 255, 255, 0.86);
+          --brand: #2e63c8;
+          --brand-2: #5a90eb;
+          --ok: #128d54;
+          --danger: #bf2e40;
+          --shadow: 0 24px 70px rgba(27, 52, 89, 0.13);
         }
 
         * { box-sizing: border-box; }
-        body { margin: 0; }
+        html, body { margin: 0; padding: 0; }
 
         .page {
+          position: relative;
           min-height: 100vh;
-          padding: 18px;
-          font-family: 'Sora', sans-serif;
-          color: var(--text);
+          padding: 20px;
+          color: var(--ink-900);
+          font-family: 'Manrope', sans-serif;
           background:
-            radial-gradient(900px 400px at 0% 0%, #edf4ff 0%, transparent 60%),
-            radial-gradient(700px 380px at 100% 0%, #f8fbff 0%, transparent 55%),
-            var(--bg);
+            radial-gradient(1050px 480px at -5% -10%, #dbe8ff 0%, transparent 58%),
+            radial-gradient(900px 420px at 110% -10%, #e8f0ff 0%, transparent 56%),
+            linear-gradient(165deg, #f2f7ff 0%, #edf3ff 46%, #f4f8ff 100%);
+          overflow-x: hidden;
         }
 
-        .container {
-          max-width: 1180px;
+        .page::before,
+        .page::after {
+          content: '';
+          position: fixed;
+          width: 240px;
+          aspect-ratio: 1;
+          pointer-events: none;
+          z-index: 0;
+          opacity: 0.25;
+          border: 1px solid rgba(84, 122, 186, 0.35);
+          background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.6), rgba(142, 172, 226, 0.08));
+          clip-path: polygon(50% 0%, 63% 20%, 85% 15%, 80% 37%, 100% 50%, 80% 63%, 85% 85%, 63% 80%, 50% 100%, 37% 80%, 15% 85%, 20% 63%, 0% 50%, 20% 37%, 15% 15%, 37% 20%);
+          animation: motifFloat 11s ease-in-out infinite;
+        }
+
+        .page::before {
+          top: 58px;
+          left: -70px;
+        }
+
+        .page::after {
+          width: 170px;
+          right: -36px;
+          bottom: 42px;
+          animation-delay: 1.8s;
+          animation-duration: 13s;
+        }
+
+        @keyframes motifFloat {
+          0%, 100% { transform: translateY(0px) rotate(0deg); }
+          50% { transform: translateY(-10px) rotate(2deg); }
+        }
+
+        .app {
+          position: relative;
+          z-index: 1;
+          max-width: 1220px;
           margin: 0 auto;
           display: grid;
           gap: 14px;
         }
 
-        .header {
+        .glass {
+          border: 1px solid var(--line);
+          border-radius: 20px;
+          background: var(--glass);
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          box-shadow: var(--shadow);
+        }
+
+        .hero {
+          padding: 18px;
+          display: grid;
+          grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.9fr);
+          gap: 14px;
+          align-items: stretch;
+        }
+
+        .hero-left {
+          display: grid;
+          gap: 12px;
+        }
+
+        .brand {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 12px;
-          padding: 16px;
-          background: var(--card);
-          border: 1px solid var(--line);
+          padding: 14px;
           border-radius: 16px;
+          background: var(--glass-strong);
+          border: 1px solid var(--line);
         }
 
-        .title {
+        .title-wrap h1 {
           margin: 0;
-          font-family: 'Cormorant Garamond', serif;
-          font-size: clamp(30px, 4vw, 46px);
-          line-height: 1;
+          font-family: 'Marcellus', serif;
+          font-size: clamp(32px, 4.2vw, 52px);
+          line-height: 0.95;
+          letter-spacing: 0.2px;
         }
 
-        .subtitle {
-          margin: 6px 0 0;
-          color: var(--muted);
+        .title-wrap p {
+          margin: 8px 0 0;
+          color: var(--ink-500);
           font-size: 13px;
+          font-weight: 600;
+          letter-spacing: 0.3px;
         }
 
         .clock {
+          min-width: 230px;
           text-align: right;
+          border-left: 1px solid var(--line);
+          padding-left: 14px;
         }
 
         .clock-time {
-          font-weight: 700;
-          font-size: clamp(22px, 3.3vw, 34px);
+          font-size: clamp(22px, 3.2vw, 36px);
+          font-weight: 800;
           line-height: 1;
+          color: var(--ink-900);
           font-variant-numeric: tabular-nums;
         }
 
         .clock-date {
-          margin-top: 5px;
-          color: var(--muted);
+          margin-top: 6px;
           font-size: 12px;
+          font-weight: 600;
+          color: var(--ink-700);
+          text-transform: capitalize;
         }
 
         .countdown {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          gap: 12px;
-          flex-wrap: wrap;
-          padding: 14px 16px;
-          background: var(--card);
+          position: relative;
+          overflow: hidden;
+          padding: 14px;
           border: 1px solid var(--line);
           border-radius: 16px;
+          background: linear-gradient(145deg, rgba(255, 255, 255, 0.85), rgba(242, 248, 255, 0.62));
+        }
+
+        .countdown::before {
+          content: '☾';
+          position: absolute;
+          right: 16px;
+          top: 12px;
+          color: rgba(46, 99, 200, 0.16);
+          font-size: 30px;
+          line-height: 1;
         }
 
         .countdown-label {
-          color: var(--muted);
+          margin: 0 0 11px;
+          color: var(--ink-700);
           font-size: 13px;
+          font-weight: 700;
         }
 
         .timer {
-          display: flex;
+          display: grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 8px;
         }
 
-        .unit {
-          min-width: 74px;
-          text-align: center;
-          padding: 8px;
+        .timer-unit {
           border-radius: 12px;
           border: 1px solid var(--line);
-          background: #fbfdff;
+          background: rgba(255, 255, 255, 0.82);
+          text-align: center;
+          padding: 10px 4px;
+          animation: raise .45s ease both;
         }
 
-        .unit-value {
-          font-size: 22px;
-          font-weight: 700;
+        .timer-unit:nth-child(2) { animation-delay: .08s; }
+        .timer-unit:nth-child(3) { animation-delay: .16s; }
+        .timer-unit:nth-child(4) { animation-delay: .24s; }
+
+        @keyframes raise {
+          from { opacity: 0; transform: translateY(9px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .timer-value {
+          font-size: clamp(20px, 2.5vw, 30px);
+          line-height: 1;
+          font-weight: 800;
+          color: var(--ink-900);
           font-variant-numeric: tabular-nums;
         }
 
-        .unit-name {
-          margin-top: 2px;
+        .timer-name {
+          margin-top: 4px;
           font-size: 11px;
-          color: var(--muted);
+          color: var(--ink-500);
+          font-weight: 700;
+          letter-spacing: 0.4px;
           text-transform: uppercase;
-          letter-spacing: .3px;
         }
 
-        .main {
-          display: grid;
-          grid-template-columns: 360px 1fr;
-          gap: 14px;
-        }
-
-        .card {
-          background: var(--card);
+        .hero-right {
           border: 1px solid var(--line);
           border-radius: 16px;
-          padding: 14px;
+          background: linear-gradient(150deg, rgba(53, 99, 179, 0.93), rgba(33, 70, 136, 0.9));
+          color: #f3f8ff;
+          padding: 15px;
+          display: grid;
+          align-content: center;
+          gap: 8px;
         }
 
-        .card h2 {
-          margin: 0 0 12px;
-          font-size: 18px;
+        .quote-label {
+          font-size: 12px;
+          letter-spacing: 0.4px;
+          text-transform: uppercase;
+          opacity: 0.78;
+          font-weight: 700;
         }
 
-        .field { margin-bottom: 10px; }
+        .quote {
+          font-family: 'Marcellus', serif;
+          font-size: clamp(22px, 2.6vw, 33px);
+          line-height: 1.2;
+          letter-spacing: 0.2px;
+          margin: 0;
+        }
+
+        .quote-note {
+          font-size: 13px;
+          color: rgba(234, 243, 255, 0.88);
+          margin: 0;
+          max-width: 35ch;
+        }
+
+        .content {
+          display: grid;
+          grid-template-columns: 370px minmax(0, 1fr);
+          gap: 14px;
+          align-items: start;
+        }
+
+        .composer {
+          position: sticky;
+          top: 16px;
+          padding: 16px;
+        }
+
+        .composer h2,
+        .feed-head h2 {
+          margin: 0;
+          font-family: 'Marcellus', serif;
+          font-size: 30px;
+          letter-spacing: 0.2px;
+        }
+
+        .composer-sub {
+          margin: 7px 0 14px;
+          font-size: 13px;
+          color: var(--ink-700);
+          font-weight: 600;
+        }
+
+        .field {
+          margin-bottom: 10px;
+        }
+
         .field label {
           display: block;
-          margin-bottom: 5px;
+          margin-bottom: 6px;
           font-size: 12px;
-          color: var(--muted);
+          color: var(--ink-700);
+          font-weight: 700;
+          letter-spacing: 0.2px;
         }
 
-        .input, .textarea {
+        .input,
+        .textarea {
           width: 100%;
+          border-radius: 12px;
           border: 1px solid var(--line);
-          border-radius: 10px;
-          padding: 10px 11px;
+          background: rgba(255, 255, 255, 0.92);
+          color: var(--ink-900);
           font: inherit;
-          color: var(--text);
-          background: #fff;
+          padding: 11px 12px;
+          outline: none;
+          transition: border-color .18s ease, box-shadow .18s ease;
+        }
+
+        .input:focus,
+        .textarea:focus {
+          border-color: rgba(46, 99, 200, 0.62);
+          box-shadow: 0 0 0 3px rgba(87, 137, 228, 0.18);
         }
 
         .textarea {
-          min-height: 96px;
+          min-height: 112px;
           resize: vertical;
         }
 
-        .btn {
+        .submit {
           width: 100%;
           border: 0;
-          border-radius: 10px;
-          padding: 11px;
-          background: var(--primary);
-          color: white;
-          font-weight: 600;
+          border-radius: 12px;
+          padding: 11px 14px;
+          background: linear-gradient(130deg, var(--brand), var(--brand-2));
+          color: #fff;
+          font-weight: 800;
+          letter-spacing: 0.2px;
           cursor: pointer;
+          transition: transform .18s ease, box-shadow .18s ease;
         }
 
-        .btn:disabled { opacity: .7; cursor: not-allowed; }
+        .submit:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 10px 28px rgba(34, 81, 156, 0.26);
+        }
+
+        .submit:disabled {
+          opacity: 0.7;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+        }
 
         .message {
           margin-top: 9px;
           font-size: 12px;
+          font-weight: 700;
         }
 
         .message.error { color: var(--danger); }
         .message.success { color: var(--ok); }
 
-        .top {
+        .feed {
+          padding: 14px;
+        }
+
+        .feed-head {
           display: flex;
-          justify-content: space-between;
           align-items: flex-start;
+          justify-content: space-between;
           gap: 10px;
           margin-bottom: 10px;
         }
 
-        .stats {
-          display: flex;
-          gap: 8px;
-          flex-wrap: wrap;
-          justify-content: flex-end;
+        .feed-count {
+          margin-top: 8px;
+          color: var(--ink-700);
+          font-size: 12px;
+          font-weight: 700;
         }
 
-        .pill {
+        .leaderboard {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: flex-end;
+          gap: 7px;
+          max-width: 52%;
+        }
+
+        .leader-pill {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
           border: 1px solid var(--line);
-          background: #fff;
           border-radius: 999px;
           padding: 6px 10px;
+          background: rgba(255, 255, 255, 0.88);
           font-size: 12px;
+          font-weight: 700;
+          color: var(--ink-700);
           white-space: nowrap;
         }
 
-        .pill b { color: var(--primary); margin-left: 5px; }
-
-        .list {
-          max-height: 570px;
-          overflow-y: auto;
-          border-top: 1px solid var(--line);
+        .leader-pill strong {
+          color: var(--brand);
         }
 
-        .row {
+        .stream {
+          border-top: 1px solid var(--line);
+          max-height: 645px;
+          overflow-y: auto;
+        }
+
+        .entry {
           display: grid;
           grid-template-columns: 1fr auto;
-          gap: 10px;
-          padding: 10px 2px;
+          gap: 12px;
+          padding: 12px 2px;
           border-bottom: 1px solid var(--line);
+          animation: fadeUp .34s ease both;
+        }
+
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(6px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .entry-top {
+          display: flex;
+          align-items: center;
+          gap: 7px;
+          margin-bottom: 3px;
+        }
+
+        .dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 999px;
+          background: rgba(46, 99, 200, 0.7);
+          box-shadow: 0 0 0 4px rgba(46, 99, 200, 0.14);
+          flex: 0 0 auto;
         }
 
         .name {
           font-size: 14px;
-          font-weight: 600;
+          font-weight: 800;
+          color: var(--ink-900);
         }
 
         .text {
-          margin-top: 4px;
-          color: #2d3f56;
+          color: #334a66;
           font-size: 14px;
+          line-height: 1.5;
         }
 
-        .time {
+        .ago {
           font-size: 12px;
-          color: var(--muted);
+          font-weight: 700;
+          color: var(--ink-500);
           white-space: nowrap;
+          padding-top: 2px;
         }
 
         .empty {
-          padding: 18px 0;
-          color: var(--muted);
+          padding: 20px 0;
+          color: var(--ink-500);
           font-size: 14px;
+          font-weight: 600;
         }
 
-        @media (max-width: 960px) {
-          .main { grid-template-columns: 1fr; }
-          .top { flex-direction: column; }
-          .stats { justify-content: flex-start; }
-          .header { flex-direction: column; align-items: flex-start; }
-          .clock { text-align: left; }
+        .feed-motif {
+          position: absolute;
+          right: 16px;
+          bottom: 16px;
+          width: 78px;
+          aspect-ratio: 1;
+          border-radius: 999px;
+          border: 1px solid rgba(76, 112, 168, 0.24);
+          background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.7), rgba(155,184,232,0.15));
+          opacity: 0.5;
+          pointer-events: none;
+        }
+
+        @media (max-width: 1060px) {
+          .hero {
+            grid-template-columns: 1fr;
+          }
+
+          .clock {
+            border-left: 0;
+            border-top: 1px solid var(--line);
+            padding-left: 0;
+            padding-top: 10px;
+            text-align: left;
+            min-width: 0;
+          }
+
+          .content {
+            grid-template-columns: 1fr;
+          }
+
+          .composer {
+            position: static;
+          }
+
+          .leaderboard {
+            max-width: none;
+            justify-content: flex-start;
+          }
+
+          .stream {
+            max-height: 520px;
+          }
         }
       `}</style>
 
-      <div className="container">
-        <header className="header">
-          <div>
-            <h1 className="title">Iyilik Hareketi</h1>
-            <p className="subtitle">Herkese açık iyilik zinciri</p>
-          </div>
-          <div className="clock">
-            <div className="clock-time">{formatClock(now)}</div>
-            <div className="clock-date">{formatDate(now)}</div>
-          </div>
-        </header>
+      <div className="app">
+        <section className="hero glass">
+          <div className="hero-left">
+            <div className="brand">
+              <div className="title-wrap">
+                <h1>İyilik Hareketi</h1>
+                <p>Ramazan boyunca iyilikleri büyüten ortak akış</p>
+              </div>
 
-        <section className="countdown">
-          <div className="countdown-label">
-            {countdown?.done
-              ? 'Ramazan başladı. Hayırlı Ramazanlar.'
-              : `Ramazan'a kalan süre (${targetDate ? targetDate.toLocaleDateString('tr-TR') : '-'})`}
-          </div>
-
-          {!countdown?.done && countdown && (
-            <div className="timer">
-              <div className="unit"><div className="unit-value">{String(countdown.d).padStart(2, '0')}</div><div className="unit-name">Gün</div></div>
-              <div className="unit"><div className="unit-value">{String(countdown.h).padStart(2, '0')}</div><div className="unit-name">Saat</div></div>
-              <div className="unit"><div className="unit-value">{String(countdown.m).padStart(2, '0')}</div><div className="unit-name">Dakika</div></div>
-              <div className="unit"><div className="unit-value">{String(countdown.s).padStart(2, '0')}</div><div className="unit-name">Saniye</div></div>
+              <div className="clock">
+                <div className="clock-time">{formatClock(now)}</div>
+                <div className="clock-date">{formatDate(now)}</div>
+              </div>
             </div>
-          )}
+
+            <div className="countdown">
+              <p className="countdown-label">
+                {countdown?.done
+                  ? 'Ramazan başladı. Hayırlı Ramazanlar.'
+                  : `Ramazan'a kalan süre (${targetDate ? targetDate.toLocaleDateString('tr-TR') : '-'})`}
+              </p>
+
+              {!countdown?.done && countdown && (
+                <div className="timer">
+                  <div className="timer-unit">
+                    <div className="timer-value">{String(countdown.d).padStart(2, '0')}</div>
+                    <div className="timer-name">Gün</div>
+                  </div>
+                  <div className="timer-unit">
+                    <div className="timer-value">{String(countdown.h).padStart(2, '0')}</div>
+                    <div className="timer-name">Saat</div>
+                  </div>
+                  <div className="timer-unit">
+                    <div className="timer-value">{String(countdown.m).padStart(2, '0')}</div>
+                    <div className="timer-name">Dakika</div>
+                  </div>
+                  <div className="timer-unit">
+                    <div className="timer-value">{String(countdown.s).padStart(2, '0')}</div>
+                    <div className="timer-name">Saniye</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <aside className="hero-right">
+            <div className="quote-label">Niyet</div>
+            <p className="quote">Her iyilik yeni bir iyiliğin kapısını açar.</p>
+            <p className="quote-note">Bu akış, yapılan güzel işleri görünür kılarak daha fazla insanı harekete geçirmek için var.</p>
+          </aside>
         </section>
 
-        <main className="main">
-          <section className="card">
-            <h2>Iyilik Ekle</h2>
+        <section className="content">
+          <article className="composer glass">
+            <h2>İyilik Ekle</h2>
+            <p className="composer-sub">Kısa, net ve gerçek bir iyilik cümlesi yaz.</p>
+
             <form onSubmit={submit}>
               <div className="field">
                 <label>İsim</label>
                 <input
                   className="input"
                   value={form.isim}
-                  onChange={(e) => setForm((p) => ({ ...p, isim: e.target.value }))}
+                  onChange={(e) => setForm((prev) => ({ ...prev, isim: e.target.value }))}
                   placeholder="Adın"
                 />
               </div>
@@ -468,7 +755,7 @@ export default function App() {
                 <input
                   className="input"
                   value={form.soyisim}
-                  onChange={(e) => setForm((p) => ({ ...p, soyisim: e.target.value }))}
+                  onChange={(e) => setForm((prev) => ({ ...prev, soyisim: e.target.value }))}
                   placeholder="Soyadın"
                 />
               </div>
@@ -478,52 +765,63 @@ export default function App() {
                 <textarea
                   className="textarea"
                   value={form.iyilik}
-                  onChange={(e) => setForm((p) => ({ ...p, iyilik: e.target.value }))}
+                  onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
                   maxLength={CONFIG.MAX_IYILIK_LENGTH}
-                  placeholder="Bugün yaptığın iyiliği kısa yaz"
+                  placeholder="Bugün yaptığın iyiliği yaz"
                 />
               </div>
 
-              <button className="btn" disabled={submitting} type="submit">
+              <button className="submit" disabled={submitting} type="submit">
                 {submitting ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
 
               {error ? <div className="message error">{error}</div> : null}
               {success ? <div className="message success">{success}</div> : null}
             </form>
-          </section>
+          </article>
 
-          <section className="card">
-            <div className="top">
-              <h2 style={{ margin: 0 }}>Son İyilikler ({items.length})</h2>
-              <div className="stats">
-                {leaderboard.map((u, idx) => (
-                  <div className="pill" key={u.name}>
-                    {idx + 1}. {u.name}<b>{u.count}</b>
+          <article className="feed glass" style={{ position: 'relative' }}>
+            <header className="feed-head">
+              <div>
+                <h2>İyilik Akışı</h2>
+                <div className="feed-count">Toplam kayıt: {items.length}</div>
+              </div>
+
+              <div className="leaderboard">
+                {leaderboard.map((person, index) => (
+                  <div className="leader-pill" key={person.name}>
+                    <span>{getRankMedal(index)}</span>
+                    <span>{person.name}</span>
+                    <strong>{person.count}</strong>
                   </div>
                 ))}
               </div>
-            </div>
+            </header>
 
-            <div className="list">
+            <div className="stream">
               {loading ? (
                 <div className="empty">Yükleniyor...</div>
               ) : items.length === 0 ? (
                 <div className="empty">Henüz kayıt yok. İlk iyiliği sen ekle.</div>
               ) : (
                 items.map((item) => (
-                  <article className="row" key={item.id}>
+                  <article className="entry" key={item.id}>
                     <div>
-                      <div className="name">{item.isim} {item.soyisim}</div>
+                      <div className="entry-top">
+                        <span className="dot" />
+                        <div className="name">{item.isim} {item.soyisim}</div>
+                      </div>
                       <div className="text">{item.iyilik}</div>
                     </div>
-                    <div className="time">{timeAgo(item.tarih)}</div>
+                    <div className="ago">{timeAgo(item.tarih)}</div>
                   </article>
                 ))
               )}
             </div>
-          </section>
-        </main>
+
+            <div className="feed-motif" />
+          </article>
+        </section>
       </div>
     </div>
   );
