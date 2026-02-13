@@ -93,7 +93,7 @@ function RamazanPremiumUIInner() {
 
       setIyilikler(sorted);
     } catch (e) {
-      setError(e.message || 'Baglanti hatasi.');
+      setError(e.message || 'Bağlantı hatası.');
     } finally {
       setIsLoading(false);
     }
@@ -116,10 +116,10 @@ function RamazanPremiumUIInner() {
 
   const countdownCells = useMemo(
     () => [
-      { label: 'GUN', val: String(countdown.d).padStart(2, '0') },
+      { label: 'GÜN', val: String(countdown.d).padStart(2, '0') },
       { label: 'SAAT', val: String(countdown.h).padStart(2, '0') },
-      { label: 'DAKIKA', val: String(countdown.m).padStart(2, '0') },
-      { label: 'SANIYE', val: String(countdown.s).padStart(2, '0') },
+      { label: 'DAKİKA', val: String(countdown.m).padStart(2, '0') },
+      { label: 'SANİYE', val: String(countdown.s).padStart(2, '0') },
     ],
     [countdown]
   );
@@ -134,7 +134,7 @@ function RamazanPremiumUIInner() {
     const iyilik = form.iyilik.trim();
 
     if (!isim || !soyisim || !iyilik) {
-      setError('Tum alanlari doldur.');
+      setError('Tüm alanları doldur.');
       return;
     }
 
@@ -156,14 +156,14 @@ function RamazanPremiumUIInner() {
 
       if (!data.success) {
         const message = data.detail ? `${data.error} (${data.detail})` : data.error;
-        throw new Error(message || 'Kayit hatasi.');
+        throw new Error(message || 'Kayıt hatası.');
       }
 
       setForm({ isim: '', soyisim: '', iyilik: '' });
-      setSuccess(data.pending ? 'Icerik onaya gonderildi.' : 'Iyilik kaydedildi.');
+      setSuccess(data.pending ? 'İçerik onaya gönderildi.' : 'İyilik kaydedildi.');
       await fetchIyilikler();
     } catch (e) {
-      setError(e.message || 'Baglanti hatasi.');
+      setError(e.message || 'Bağlantı hatası.');
     } finally {
       setIsSubmitting(false);
     }
@@ -572,7 +572,7 @@ function RamazanPremiumUIInner() {
         <div className="topbar">
           <div>
             <h1 className="title">
-              Iyilik <span className="gold">Hareketi</span>
+              İyilik <span className="gold">Hareketi</span>
             </h1>
             <p className="sub">Ramazan 2026 • Topluluk Akişi</p>
           </div>
@@ -595,7 +595,7 @@ function RamazanPremiumUIInner() {
           <section className="glass-card countdown">
             <div className="label-row">
               <span className="dot" />
-              <span className="micro">Ramazan'a Kalan Sure ({targetDate.toLocaleDateString('tr-TR')})</span>
+              <span className="micro">Ramazan'a Kalan Süre ({targetDate.toLocaleDateString('tr-TR')})</span>
             </div>
             <div className="count-grid">
               {countdownCells.map((item) => (
@@ -608,17 +608,17 @@ function RamazanPremiumUIInner() {
           </section>
 
           <section className="glass-card niyet">
-            <h3>Gunun Niyeti</h3>
-            <p>"Her iyilik yeni bir iyiligin kapisini acar."</p>
+            <h3>Günün Niyeti</h3>
+            <p>"Her iyilik yeni bir iyiliğin kapısını açar."</p>
             <div className="line">Ramazan Ruhu</div>
           </section>
 
           <section className="glass-card form-card">
-            <h3 className="section-title">Iyilik Birak</h3>
+            <h3 className="section-title">İyilik Bırak</h3>
             <form className="fields" onSubmit={submit}>
               <input
                 className="input"
-                placeholder="Adiniz"
+                placeholder="Adınız"
                 value={form.isim}
                 onChange={(e) => setForm((prev) => ({ ...prev, isim: e.target.value }))}
               />
@@ -630,12 +630,12 @@ function RamazanPremiumUIInner() {
               />
               <textarea
                 className="textarea"
-                placeholder="Bugun ne yaptin?"
+                placeholder="Bugün ne yaptın?"
                 value={form.iyilik}
                 onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
               />
               <button className="btn" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? 'Gonderiliyor...' : 'Gonder'}
+                {isSubmitting ? 'Gönderiliyor...' : 'Gönder'}
               </button>
             </form>
 
@@ -645,15 +645,15 @@ function RamazanPremiumUIInner() {
 
           <section className="glass-card flow-card">
             <div className="flow-head">
-              <h3 className="section-title">Iyilik Akisi</h3>
-              <span className="pill">{iyilikler.length} Paylasim</span>
+              <h3 className="section-title">İyilik Akışı</h3>
+              <span className="pill">{iyilikler.length} Paylaşım</span>
             </div>
 
             <div className="list">
               {isLoading ? (
-                <div className="empty">Yukleniyor...</div>
+                <div className="empty">Yükleniyor...</div>
               ) : iyilikler.length === 0 ? (
-                <div className="empty">Henuz paylasim yok.</div>
+                <div className="empty">Henüz paylaşım yok.</div>
               ) : (
                 iyilikler.map((i) => (
                   <div key={i.id} className="item">
@@ -672,7 +672,7 @@ function RamazanPremiumUIInner() {
           </section>
         </div>
 
-        <footer className="footer">Iyilikle Kalin • 2026</footer>
+        <footer className="footer">İyilikle Kalın • 2026</footer>
       </main>
     </div>
   );
