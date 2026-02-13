@@ -3,13 +3,93 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>İyilik Hareketi | Ramazan 2025</title>
-    <meta name="description" content="Ramazan ayında iyilik hareketi başlatalım. Her gün yaptığın iyilikleri kaydet ve paylaş." />
-    <meta name="theme-color" content="#1a1d2e" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☽</text></svg>" />
+    <title>Iyilik Hareketi | Ramazan 2026</title>
+    <meta name="description" content="Ramazan boyunca yapilan iyilikleri kaydet ve toplulukla paylas." />
+    <meta name="theme-color" content="#020617" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☽</text></svg>"
+    />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        background: #020617;
+        color: #e2e8f0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      }
+      #boot-fallback {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+      }
+      #boot-fallback .card {
+        max-width: 760px;
+        width: 100%;
+        border: 1px solid rgba(255,255,255,0.16);
+        border-radius: 14px;
+        background: rgba(255,255,255,0.05);
+        padding: 16px;
+      }
+      #boot-fallback h2 {
+        margin: 0 0 8px;
+        font-size: 20px;
+      }
+      #boot-fallback p {
+        margin: 0;
+        opacity: .85;
+      }
+      #boot-fallback pre {
+        margin-top: 12px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        padding: 12px;
+        border-radius: 10px;
+        background: #0b1220;
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #fda4af;
+        display: none;
+      }
+      #boot-fallback[data-error='1'] pre {
+        display: block;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <div id="boot-fallback" data-error="0">
+        <div class="card">
+          <h2>Uygulama yukleniyor...</h2>
+          <p>Eger bu ekran uzun sure kalirsa JavaScript calismiyordur veya runtime hatasi vardir.</p>
+          <pre id="boot-error"></pre>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        var fallback = document.getElementById('boot-fallback');
+        var errorBox = document.getElementById('boot-error');
+
+        function showError(msg) {
+          if (!fallback || !errorBox) return;
+          fallback.setAttribute('data-error', '1');
+          errorBox.textContent = String(msg || 'Bilinmeyen hata');
+        }
+
+        window.addEventListener('error', function (e) {
+          showError((e && e.message) || 'Script hata verdi');
+        });
+
+        window.addEventListener('unhandledrejection', function (e) {
+          var reason = e && e.reason;
+          showError(reason && reason.message ? reason.message : reason);
+        });
+      })();
+    </script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
