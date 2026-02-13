@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 
-const ModernRamazanUI = () => {
+const RamazanPremiumUI = () => {
   const [time, setTime] = useState(new Date());
-  const [iyilikler] = useState([
-    { id: 1, kisi: "Ahmet Erkan", metin: "Bugün mahalledeki fırına askıda ekmek bıraktım.", vakit: "10 dk önce" },
-    { id: 2, kisi: "Selin Yılmaz", metin: "Öğrenci evine iftariyelik hazırlayıp gönderdik.", vakit: "45 dk önce" },
-    { id: 3, kisi: "Hüseyin Avni", metin: "Barınaktaki dostlarımız için mama bağışı yaptık.", vakit: "2 saat önce" },
+  const [iyilikler, setIyilikler] = useState([
+    { id: 1, isim: "Samet K.", metin: "İyilik Hareketini kurdum <3", tarih: "1 sa önce" }
   ]);
 
   useEffect(() => {
@@ -14,129 +12,152 @@ const ModernRamazanUI = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 font-sans selection:bg-amber-500/30 overflow-hidden relative">
+    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans selection:bg-amber-500/30 overflow-x-hidden relative">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Cinzel+Decorative:wght@700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Bento:wght@700&display=swap');
         
-        .font-main { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .font-ornate { font-family: 'Cinzel Decorative', serif; }
+        body { background-color: #020617; }
         
-        .bg-mesh {
-          background-image: 
-            radial-gradient(at 0% 0%, rgba(212, 175, 55, 0.15) 0px, transparent 50%),
-            radial-gradient(at 100% 0%, rgba(16, 185, 129, 0.1) 0px, transparent 50%),
-            radial-gradient(at 50% 100%, rgba(30, 58, 138, 0.3) 0px, transparent 50%);
+        .bento-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          grid-template-rows: auto auto;
+          gap: 1.5rem;
         }
 
-        .glass {
+        .glass-card {
           background: rgba(255, 255, 255, 0.03);
-          backdrop-filter: blur(12px);
+          backdrop-filter: blur(20px);
           border: 1px solid rgba(255, 255, 255, 0.08);
-          box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+          border-radius: 2rem;
+          padding: 2rem;
+          transition: all 0.3s ease;
         }
 
-        .gold-shimmer {
-          background: linear-gradient(90deg, #d4af37, #f5e6a3, #d4af37);
+        .glass-card:hover {
+          background: rgba(255, 255, 255, 0.05);
+          border: 1px solid rgba(212, 175, 55, 0.2);
+          transform: translateY(-5px);
+        }
+
+        .gold-text {
+          background: linear-gradient(135deg, #f5e6a3 0%, #d4af37 50%, #8a6d1d 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
-          background-size: 200% auto;
-          animation: shimmer 4s linear infinite;
         }
 
-        @keyframes shimmer { to { background-position: 200% center; } }
-        
-        .timer-unit {
-          background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0) 100%);
-          border: 1px solid rgba(212, 175, 55, 0.2);
+        .orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(80px);
+          z-index: 0;
         }
       `}</style>
 
-      {/* Arka Plan Katmanları */}
-      <div className="absolute inset-0 bg-mesh opacity-50" />
-      <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/dark-matter.png')] opacity-30" />
+      {/* Arka Plan Dekorasyonu (Aura) */}
+      <div className="orb w-[500px] h-[500px] bg-blue-900/20 -top-20 -left-20" />
+      <div className="orb w-[400px] h-[400px] bg-amber-900/10 bottom-10 right-10" />
 
-      <main className="relative z-10 max-w-6xl mx-auto px-6 py-12 flex flex-col min-h-screen">
+      <main className="relative z-10 max-w-7xl mx-auto px-6 py-12">
         
-        {/* Üst Kısım: Başlık ve Büyük Saat */}
-        <header className="flex flex-col items-center justify-center flex-1 py-10">
-          <div className="flex items-center gap-4 mb-6 opacity-80">
-            <div className="h-px w-12 bg-amber-500/50" />
-            <span className="font-ornate text-amber-500 tracking-[0.3em] uppercase text-sm">İyilik Hareketi</span>
-            <div className="h-px w-12 bg-amber-500/50" />
-          </div>
-
-          <div className="relative group cursor-default">
-            <div className="absolute -inset-8 bg-amber-500/10 blur-3xl rounded-full opacity-50 group-hover:opacity-80 transition-opacity" />
-            <h1 className="font-main text-8xl md:text-[10rem] font-extrabold tracking-tighter leading-none flex items-baseline gap-2">
-              <span className="text-white drop-shadow-2xl">
-                {time.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-              <span className="text-3xl md:text-5xl font-light text-amber-500/60 font-main">
-                {time.toLocaleTimeString('tr-TR', { second: '2-digit' })}
-              </span>
+        {/* Üst Bilgi Satırı */}
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-8">
+          <div>
+            <h1 className="text-6xl font-extrabold tracking-tight mb-2">
+              İyilik <span className="gold-text">Hareketi</span>
             </h1>
+            <p className="text-slate-500 tracking-[0.2em] uppercase text-xs font-bold">Ramazan 2026 • Şanlıurfa</p>
           </div>
-
-          <p className="mt-8 font-main text-lg text-slate-400 tracking-wide font-light">
-            {time.toLocaleDateString('tr-TR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
-        </header>
-
-        {/* Orta Kısım: İyilik Kartları Paneli */}
-        <section className="grid md:grid-cols-2 gap-8 mb-12">
           
-          {/* Sol: İyilik Paylaşım Listesi */}
-          <div className="glass rounded-[2.5rem] p-8 relative overflow-hidden">
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="font-ornate text-xl gold-shimmer">İyilikler Zinciri</h2>
-              <div className="px-3 py-1 bg-amber-500/10 rounded-full border border-amber-500/20 text-[10px] text-amber-500 uppercase tracking-widest">Canlı Akış</div>
+          <div className="text-right">
+            <div className="text-5xl font-light tracking-tighter text-white/90">
+              {time.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </div>
+            <div className="text-xs text-amber-500/60 font-bold uppercase mt-1 tracking-widest">
+              {time.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', weekday: 'long' })}
+            </div>
+          </div>
+        </div>
 
-            <div className="space-y-6 max-h-80 overflow-y-auto pr-2">
-              {iyilikler.map((item) => (
-                <div key={item.id} className="group border-b border-white/5 pb-4 last:border-0 hover:bg-white/[0.02] transition-all rounded-lg p-2">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-semibold text-white/80 group-hover:text-amber-400 transition-colors">{item.kisi}</span>
-                    <span className="text-[10px] text-slate-500">{item.vakit}</span>
-                  </div>
-                  <p className="text-sm text-slate-400 leading-relaxed italic">"{item.metin}"</p>
+        {/* Bento Grid Yapısı */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          
+          {/* Geri Sayım Kartı */}
+          <div className="md:col-span-8 glass-card flex flex-col justify-center">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-2 h-2 rounded-full bg-amber-500" />
+              <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Ramazan'a Kalan Süre</span>
+            </div>
+            <div className="grid grid-cols-4 gap-4">
+              {[
+                { label: 'GÜN', val: '05' },
+                { label: 'SAAT', val: '18' },
+                { label: 'DAKİKA', val: '49' },
+                { label: 'SANİYE', val: '19' }
+              ].map(item => (
+                <div key={item.label}>
+                  <div className="text-4xl md:text-6xl font-bold text-white mb-1">{item.val}</div>
+                  <div className="text-[10px] text-slate-500 font-bold">{item.label}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Sağ: İstatistik / Mottolar */}
-          <div className="flex flex-col gap-6">
-            <div className="glass rounded-[2rem] p-8 flex-1 flex flex-col justify-center border-l-4 border-l-amber-500">
-              <span className="text-amber-500 text-xs uppercase tracking-widest mb-2 font-bold">Günün Ayeti</span>
-              <p className="font-main text-lg leading-relaxed text-slate-200 italic font-light">
-                "İyiliğin karşılığı, yalnız iyiliktir."
-              </p>
-              <span className="text-slate-500 text-xs mt-4">— Rahmân Suresi, 60. Ayet</span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="glass rounded-3xl p-6 text-center">
-                <div className="text-2xl font-bold text-white mb-1">1,240</div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Toplam İyilik</div>
-              </div>
-              <div className="glass rounded-3xl p-6 text-center">
-                <div className="text-2xl font-bold text-amber-500 mb-1">14</div>
-                <div className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Gün Kaldı</div>
-              </div>
+          {/* Niyet Kartı (Sağ Üst) */}
+          <div className="md:col-span-4 bg-gradient-to-br from-amber-500 to-amber-700 rounded-[2rem] p-8 text-slate-900 shadow-2xl shadow-amber-900/20">
+            <div className="text-xs font-bold uppercase tracking-widest opacity-70 mb-4">Günün Niyeti</div>
+            <p className="text-2xl font-bold leading-snug">
+              "Her iyilik yeni bir iyiliğin kapısını açar."
+            </p>
+            <div className="mt-8 flex items-center gap-2">
+              <div className="w-8 h-px bg-slate-900/30" />
+              <span className="text-xs font-bold italic">Ramazan Ruhu</span>
             </div>
           </div>
-        </section>
 
-        {/* Footer */}
-        <footer className="py-6 border-t border-white/5 text-center">
-          <p className="text-[10px] text-slate-600 uppercase tracking-[0.5em] font-bold">
-            2026 • Ramazan Meditasyonu
-          </p>
+          {/* İyilik Ekle (Sol Alt) */}
+          <div className="md:col-span-4 glass-card">
+            <h3 className="text-xl font-bold mb-6">İyilik Bırak</h3>
+            <div className="space-y-4">
+              <input placeholder="Adınız" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-amber-500/50 transition-all text-sm" />
+              <textarea placeholder="Bugün ne yaptın?" rows="4" className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-amber-500/50 transition-all text-sm resize-none" />
+              <button className="w-full py-4 bg-white text-slate-950 font-bold rounded-2xl hover:bg-amber-400 transition-colors shadow-xl">Gönder</button>
+            </div>
+          </div>
+
+          {/* İyilik Akışı (Sağ Alt) */}
+          <div className="md:col-span-8 glass-card">
+             <div className="flex justify-between items-center mb-6">
+               <h3 className="text-xl font-bold">İyilik Akışı</h3>
+               <span className="text-[10px] bg-white/10 px-3 py-1 rounded-full text-slate-400">1 PAYLAŞIM</span>
+             </div>
+             
+             <div className="space-y-4">
+                {iyilikler.map(i => (
+                  <div key={i.id} className="flex items-center justify-between p-6 bg-white/[0.02] rounded-3xl border border-white/5 hover:border-amber-500/30 transition-all">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-amber-500 flex items-center justify-center font-bold text-white shadow-lg">
+                        {i.isim[0]}
+                      </div>
+                      <div>
+                        <div className="font-bold text-white">{i.isim}</div>
+                        <div className="text-sm text-slate-400">{i.metin}</div>
+                      </div>
+                    </div>
+                    <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{i.tarih}</div>
+                  </div>
+                ))}
+             </div>
+          </div>
+
+        </div>
+
+        <footer className="mt-16 text-center opacity-30 text-[10px] tracking-[0.5em] uppercase font-bold">
+          İyilikle Kalın • 2026
         </footer>
       </main>
     </div>
   );
 };
 
-export default ModernRamazanUI;
+export default RamazanPremiumUI;
