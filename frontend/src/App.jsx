@@ -8,10 +8,7 @@ function getNextRamadanDate() {
 
   const candidate = new Date(base);
   candidate.setFullYear(now.getFullYear());
-
-  if (candidate <= now) {
-    candidate.setFullYear(now.getFullYear() + 1);
-  }
+  if (candidate <= now) candidate.setFullYear(now.getFullYear() + 1);
 
   return candidate;
 }
@@ -64,10 +61,8 @@ function countdownParts(target) {
   };
 }
 
-function initials(name, surname) {
-  const n = (name || '').trim().charAt(0);
-  const s = (surname || '').trim().charAt(0);
-  return `${n}${s}`.toUpperCase() || 'IH';
+function getInitials(isim, soyisim) {
+  return `${(isim || '').charAt(0)}${(soyisim || '').charAt(0)}`.toUpperCase() || 'IH';
 }
 
 export default function App() {
@@ -80,7 +75,6 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
   const [form, setForm] = useState({ isim: '', soyisim: '', iyilik: '' });
 
   const leaderboard = useMemo(() => {
@@ -125,8 +119,7 @@ export default function App() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const nextNow = new Date();
-      setNow(nextNow);
+      setNow(new Date());
       setCountdown(countdownParts(targetDate));
     }, 1000);
 
@@ -178,75 +171,72 @@ export default function App() {
   };
 
   return (
-    <div className="screen">
+    <div className="scene">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&display=swap');
 
         :root {
-          --bg: #eef5ff;
-          --ink: #12253f;
-          --muted: #5f7491;
-          --line: rgba(36, 68, 111, 0.16);
-          --panel: rgba(255, 255, 255, 0.82);
-          --panel-strong: rgba(255, 255, 255, 0.94);
-          --brand: #2f69d8;
-          --brand-soft: rgba(47, 105, 216, 0.12);
-          --ok: #13864f;
-          --danger: #c73545;
-          --shadow: 0 20px 55px rgba(27, 57, 99, 0.14);
+          --bg: #f8f5ee;
+          --paper: rgba(255, 254, 251, 0.87);
+          --paper-strong: rgba(255, 255, 255, 0.95);
+          --ink: #1f2b3d;
+          --muted: #5f6f86;
+          --line: rgba(46, 68, 97, 0.17);
+          --brand: #0f7f72;
+          --brand-soft: rgba(15, 127, 114, 0.13);
+          --accent: #d1a25a;
+          --danger: #c33a4f;
+          --ok: #0f8f59;
+          --shadow: 0 22px 50px rgba(42, 50, 71, 0.13);
         }
 
-        * {
-          box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
 
         html, body {
           margin: 0;
           padding: 0;
         }
 
-        .screen {
+        .scene {
           min-height: 100vh;
-          padding: 18px;
-          color: var(--ink);
-          font-family: 'Poppins', sans-serif;
-          font-weight: 500;
+          padding: 20px;
           background:
-            radial-gradient(900px 420px at -10% -10%, #dce9ff 0%, transparent 60%),
-            radial-gradient(980px 430px at 110% -15%, #eaf1ff 0%, transparent 56%),
-            linear-gradient(165deg, #f5f9ff 0%, #ecf3ff 55%, #f3f7ff 100%);
+            radial-gradient(900px 420px at -5% -10%, #f2ecd9 0%, transparent 55%),
+            radial-gradient(900px 420px at 105% -10%, #e4f3ef 0%, transparent 52%),
+            var(--bg);
+          color: var(--ink);
+          font-family: 'Outfit', sans-serif;
           position: relative;
           overflow-x: hidden;
         }
 
-        .screen::before,
-        .screen::after {
+        .scene::before,
+        .scene::after {
           content: '';
           position: fixed;
-          border-radius: 999px;
           pointer-events: none;
-          border: 1px solid rgba(67, 106, 169, 0.28);
+          border: 1px solid rgba(71, 102, 133, 0.24);
           background: rgba(255, 255, 255, 0.32);
           z-index: 0;
+          opacity: 0.5;
+          clip-path: polygon(50% 0%, 60% 20%, 82% 18%, 80% 40%, 100% 50%, 80% 60%, 82% 82%, 60% 80%, 50% 100%, 40% 80%, 18% 82%, 20% 60%, 0% 50%, 20% 40%, 18% 18%, 40% 20%);
         }
 
-        .screen::before {
-          width: 180px;
-          height: 180px;
-          top: 85px;
-          left: -52px;
-          box-shadow: inset 0 0 0 30px rgba(110, 150, 220, 0.05);
+        .scene::before {
+          width: 170px;
+          height: 170px;
+          left: -45px;
+          top: 80px;
         }
 
-        .screen::after {
+        .scene::after {
           width: 120px;
           height: 120px;
           right: -25px;
-          bottom: 45px;
-          box-shadow: inset 0 0 0 18px rgba(110, 150, 220, 0.05);
+          bottom: 70px;
         }
 
-        .shell {
+        .layout {
           position: relative;
           z-index: 1;
           max-width: 1240px;
@@ -255,163 +245,218 @@ export default function App() {
           gap: 14px;
         }
 
-        .panel {
-          background: var(--panel);
+        .glass {
+          background: var(--paper);
           border: 1px solid var(--line);
           border-radius: 20px;
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
           box-shadow: var(--shadow);
         }
 
-        .top {
+        .hero {
           padding: 16px;
           display: grid;
-          grid-template-columns: 1fr auto;
+          grid-template-columns: 1.2fr 0.8fr;
           gap: 12px;
-          align-items: center;
+          align-items: stretch;
         }
 
-        .brand-title {
-          margin: 0;
-          font-size: clamp(30px, 4vw, 48px);
-          line-height: 1;
+        .title-card {
+          border: 1px solid var(--line);
+          border-radius: 15px;
+          background: var(--paper-strong);
+          padding: 14px;
+          display: grid;
+          gap: 10px;
+          align-content: start;
+        }
+
+        .eyebrow {
+          font-size: 11px;
           font-weight: 700;
-          letter-spacing: 0.2px;
-        }
-
-        .brand-sub {
-          margin: 8px 0 0;
+          text-transform: uppercase;
+          letter-spacing: 0.8px;
           color: var(--muted);
-          font-size: 13px;
-          font-weight: 600;
         }
 
-        .clock {
-          text-align: right;
-          border-left: 1px solid var(--line);
-          padding-left: 14px;
+        .main-title {
+          margin: 0;
+          font-family: 'DM Serif Display', serif;
+          font-size: clamp(34px, 5vw, 60px);
+          line-height: 0.95;
+          letter-spacing: 0.2px;
+          color: var(--ink);
         }
 
-        .clock-time {
-          font-size: clamp(24px, 3.2vw, 38px);
+        .main-sub {
+          margin: 0;
+          font-size: 14px;
+          color: var(--muted);
+          font-weight: 500;
+          max-width: 50ch;
+        }
+
+        .clock-strip {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+          border-top: 1px solid var(--line);
+          padding-top: 10px;
+        }
+
+        .clock-now {
+          font-size: clamp(24px, 3.4vw, 38px);
           line-height: 1;
           font-weight: 700;
+          color: var(--ink);
           font-variant-numeric: tabular-nums;
         }
 
         .clock-date {
-          margin-top: 6px;
+          text-align: right;
           font-size: 12px;
           font-weight: 600;
           color: var(--muted);
         }
 
-        .count {
+        .hero-note {
+          border-radius: 15px;
+          border: 1px solid rgba(13, 93, 83, 0.27);
+          background: linear-gradient(145deg, #f6fffd, #eefaf7);
           padding: 14px;
           display: grid;
+          align-content: center;
+          gap: 8px;
+        }
+
+        .note-title {
+          margin: 0;
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.6px;
+          color: #2b6f66;
+          font-weight: 700;
+        }
+
+        .note-text {
+          margin: 0;
+          font-size: clamp(20px, 2.6vw, 32px);
+          line-height: 1.2;
+          font-family: 'DM Serif Display', serif;
+          color: #1f4b45;
+        }
+
+        .note-small {
+          margin: 0;
+          font-size: 13px;
+          color: #406e69;
+        }
+
+        .countdown {
+          padding: 12px;
+          display: grid;
+          gap: 10px;
           grid-template-columns: auto 1fr;
-          gap: 12px;
           align-items: center;
-          background: linear-gradient(140deg, var(--panel-strong), var(--panel));
         }
 
         .count-label {
           font-size: 13px;
-          font-weight: 600;
           color: var(--muted);
+          font-weight: 600;
           white-space: nowrap;
         }
 
-        .timer {
+        .count-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 8px;
         }
 
-        .unit {
-          border: 1px solid var(--line);
+        .box {
           border-radius: 12px;
-          background: #ffffff;
+          border: 1px solid var(--line);
+          background: #fff;
           text-align: center;
-          padding: 8px 5px;
+          padding: 8px 4px;
         }
 
-        .unit-value {
-          font-size: clamp(22px, 2.8vw, 32px);
+        .box-value {
+          font-size: clamp(22px, 3vw, 32px);
           line-height: 1;
           font-weight: 700;
           font-variant-numeric: tabular-nums;
         }
 
-        .unit-name {
-          margin-top: 3px;
-          font-size: 11px;
+        .box-name {
+          font-size: 10px;
+          margin-top: 4px;
           color: var(--muted);
-          font-weight: 600;
+          letter-spacing: 0.5px;
           text-transform: uppercase;
+          font-weight: 600;
         }
 
-        .grid {
+        .body {
           display: grid;
-          grid-template-columns: 380px minmax(0, 1fr);
+          grid-template-columns: 390px minmax(0, 1fr);
           gap: 14px;
           align-items: start;
         }
 
-        .left {
+        .compose {
           padding: 16px;
           position: sticky;
           top: 14px;
         }
 
-        .left h2,
-        .right h2 {
+        .section-title {
           margin: 0;
-          font-size: 28px;
-          line-height: 1.05;
-          font-weight: 700;
+          font-family: 'DM Serif Display', serif;
+          font-size: 34px;
+          line-height: 1;
         }
 
-        .left p {
-          margin: 8px 0 14px;
-          font-size: 13px;
+        .section-sub {
+          margin: 7px 0 14px;
           color: var(--muted);
-          font-weight: 600;
+          font-size: 13px;
+          font-weight: 500;
         }
 
         .field {
           margin-bottom: 10px;
         }
 
-        .field label {
+        .label {
           display: block;
           margin-bottom: 6px;
           font-size: 12px;
-          color: #49607f;
+          color: #4e5f79;
+          letter-spacing: 0.2px;
           font-weight: 600;
-          letter-spacing: 0.1px;
         }
 
         .input,
         .textarea {
           width: 100%;
+          font: inherit;
+          font-weight: 500;
+          color: var(--ink);
           border: 1px solid var(--line);
           border-radius: 12px;
           background: #fff;
-          color: var(--ink);
-          font-family: 'Poppins', sans-serif;
-          font-size: 14px;
-          font-weight: 500;
           padding: 11px 12px;
           outline: none;
-          transition: border-color .16s ease, box-shadow .16s ease;
+          transition: border-color .15s ease, box-shadow .15s ease;
         }
 
         .input:focus,
         .textarea:focus {
-          border-color: rgba(47, 105, 216, 0.6);
-          box-shadow: 0 0 0 3px rgba(47, 105, 216, 0.14);
+          border-color: rgba(15, 127, 114, 0.45);
+          box-shadow: 0 0 0 3px rgba(15, 127, 114, 0.14);
         }
 
         .textarea {
@@ -423,72 +468,51 @@ export default function App() {
           width: 100%;
           border: 0;
           border-radius: 12px;
-          padding: 12px 14px;
-          background: linear-gradient(130deg, #2d62cc, #4a80e3);
+          padding: 12px;
+          background: linear-gradient(135deg, #0f7f72, #2ca392);
           color: #fff;
-          font-family: 'Poppins', sans-serif;
+          font-weight: 700;
           font-size: 14px;
-          font-weight: 600;
           letter-spacing: 0.2px;
           cursor: pointer;
-          transition: transform .16s ease, box-shadow .16s ease;
+          transition: transform .15s ease, box-shadow .15s ease;
         }
 
         .submit:hover {
           transform: translateY(-1px);
-          box-shadow: 0 10px 26px rgba(47, 105, 216, 0.28);
+          box-shadow: 0 12px 22px rgba(12, 116, 104, 0.26);
         }
 
         .submit:disabled {
-          opacity: .7;
+          opacity: 0.7;
           cursor: not-allowed;
           transform: none;
           box-shadow: none;
         }
 
-        .msg {
-          margin-top: 9px;
+        .message {
+          margin-top: 8px;
           font-size: 12px;
           font-weight: 600;
         }
 
-        .msg.error {
-          color: var(--danger);
-        }
-
-        .msg.success {
-          color: var(--ok);
-        }
+        .message.error { color: var(--danger); }
+        .message.success { color: var(--ok); }
 
         .tip {
-          margin-top: 12px;
+          margin-top: 11px;
           border: 1px solid var(--line);
           border-radius: 12px;
           background: var(--brand-soft);
-          padding: 10px;
+          padding: 9px 10px;
+          color: #295f57;
           font-size: 12px;
-          color: #3f5880;
           font-weight: 600;
         }
 
-        .right {
+        .feed {
           padding: 14px;
           position: relative;
-          overflow: hidden;
-        }
-
-        .right::after {
-          content: '';
-          position: absolute;
-          right: 14px;
-          bottom: 14px;
-          width: 72px;
-          height: 72px;
-          border-radius: 999px;
-          border: 1px solid rgba(67, 106, 169, 0.22);
-          background: rgba(255, 255, 255, 0.38);
-          box-shadow: inset 0 0 0 14px rgba(106, 142, 206, 0.08);
-          pointer-events: none;
         }
 
         .feed-head {
@@ -499,8 +523,8 @@ export default function App() {
           margin-bottom: 10px;
         }
 
-        .feed-sub {
-          margin-top: 8px;
+        .feed-count {
+          margin-top: 7px;
           font-size: 12px;
           color: var(--muted);
           font-weight: 600;
@@ -509,42 +533,49 @@ export default function App() {
         .leaders {
           display: flex;
           flex-wrap: wrap;
+          gap: 7px;
           justify-content: flex-end;
-          gap: 8px;
-          max-width: 56%;
+          max-width: 58%;
         }
 
-        .leader {
+        .leader-pill {
+          background: #fff;
           border: 1px solid var(--line);
           border-radius: 999px;
-          background: #fff;
           padding: 6px 10px;
           font-size: 12px;
+          color: #51617a;
           font-weight: 600;
-          color: #425b7d;
           white-space: nowrap;
         }
 
-        .leader strong {
-          color: #2d62cc;
+        .leader-pill strong {
+          color: #0f7f72;
           margin-left: 5px;
         }
 
         .stream {
           border-top: 1px solid var(--line);
-          max-height: 660px;
+          max-height: 700px;
           overflow-y: auto;
+          padding-right: 2px;
         }
 
-        .row {
+        .item {
           display: grid;
           grid-template-columns: 1fr auto;
-          gap: 10px;
-          border-bottom: 1px solid var(--line);
+          gap: 12px;
           padding: 11px 2px;
+          border-bottom: 1px solid var(--line);
+          animation: fadeIn .28s ease;
         }
 
-        .row-main {
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(5px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        .item-main {
           display: flex;
           gap: 10px;
           min-width: 0;
@@ -553,27 +584,27 @@ export default function App() {
         .avatar {
           width: 36px;
           height: 36px;
-          border-radius: 999px;
-          border: 1px solid rgba(47, 105, 216, 0.24);
-          background: linear-gradient(145deg, #ecf3ff, #dceaff);
-          color: #2d5cb8;
+          border-radius: 50%;
+          background: linear-gradient(150deg, #e8f8f5, #d3eeea);
+          border: 1px solid rgba(15, 127, 114, 0.3);
           display: grid;
           place-items: center;
+          color: #0f6f64;
           font-size: 12px;
           font-weight: 700;
-          flex: 0 0 auto;
+          flex-shrink: 0;
         }
 
         .name {
           font-size: 14px;
-          font-weight: 600;
-          color: #1b3354;
+          font-weight: 700;
+          color: #21324a;
         }
 
         .text {
           margin-top: 3px;
           font-size: 14px;
-          color: #314a6a;
+          color: #3a4d66;
           line-height: 1.45;
           word-break: break-word;
         }
@@ -593,56 +624,55 @@ export default function App() {
           font-weight: 600;
         }
 
-        @media (max-width: 1080px) {
-          .top {
+        @media (max-width: 1100px) {
+          .hero {
             grid-template-columns: 1fr;
           }
 
-          .clock {
-            border-left: 0;
-            border-top: 1px solid var(--line);
-            padding-left: 0;
-            padding-top: 10px;
-            text-align: left;
-          }
-
-          .count {
+          .countdown {
             grid-template-columns: 1fr;
           }
 
-          .grid {
+          .body {
             grid-template-columns: 1fr;
           }
 
-          .left {
+          .compose {
             position: static;
           }
 
           .leaders {
-            max-width: 100%;
+            max-width: none;
             justify-content: flex-start;
           }
 
           .stream {
-            max-height: 520px;
+            max-height: 540px;
           }
         }
       `}</style>
 
-      <div className="shell">
-        <header className="panel top">
-          <div>
-            <h1 className="brand-title">Iyilik Hareketi</h1>
-            <p className="brand-sub">Herkesin katilabildigi, acik ve guvenli iyilik akisi</p>
-          </div>
+      <div className="layout">
+        <section className="hero glass">
+          <article className="title-card">
+            <div className="eyebrow">Topluluk Panosu</div>
+            <h1 className="main-title">Iyilik Hareketi</h1>
+            <p className="main-sub">Herkesin gorebildigi, gercek iyiliklerden olusan ortak bir akisa hos geldin.</p>
 
-          <div className="clock">
-            <div className="clock-time">{formatClock(now)}</div>
-            <div className="clock-date">{formatDate(now)}</div>
-          </div>
-        </header>
+            <div className="clock-strip">
+              <div className="clock-now">{formatClock(now)}</div>
+              <div className="clock-date">{formatDate(now)}</div>
+            </div>
+          </article>
 
-        <section className="panel count">
+          <aside className="hero-note">
+            <h2 className="note-title">Bugunun Niyeti</h2>
+            <p className="note-text">Iyilik gorundukce buyur.</p>
+            <p className="note-small">Kisa bir not birak, bir baskasina ilham olsun.</p>
+          </aside>
+        </section>
+
+        <section className="countdown glass">
           <div className="count-label">
             {countdown?.done
               ? 'Ramazan basladi. Hayirli Ramazanlar.'
@@ -650,35 +680,23 @@ export default function App() {
           </div>
 
           {!countdown?.done && countdown && (
-            <div className="timer">
-              <div className="unit">
-                <div className="unit-value">{String(countdown.d).padStart(2, '0')}</div>
-                <div className="unit-name">Gun</div>
-              </div>
-              <div className="unit">
-                <div className="unit-value">{String(countdown.h).padStart(2, '0')}</div>
-                <div className="unit-name">Saat</div>
-              </div>
-              <div className="unit">
-                <div className="unit-value">{String(countdown.m).padStart(2, '0')}</div>
-                <div className="unit-name">Dakika</div>
-              </div>
-              <div className="unit">
-                <div className="unit-value">{String(countdown.s).padStart(2, '0')}</div>
-                <div className="unit-name">Saniye</div>
-              </div>
+            <div className="count-grid">
+              <div className="box"><div className="box-value">{String(countdown.d).padStart(2, '0')}</div><div className="box-name">Gun</div></div>
+              <div className="box"><div className="box-value">{String(countdown.h).padStart(2, '0')}</div><div className="box-name">Saat</div></div>
+              <div className="box"><div className="box-value">{String(countdown.m).padStart(2, '0')}</div><div className="box-name">Dakika</div></div>
+              <div className="box"><div className="box-value">{String(countdown.s).padStart(2, '0')}</div><div className="box-name">Saniye</div></div>
             </div>
           )}
         </section>
 
-        <main className="grid">
-          <section className="panel left">
-            <h2>Iyilik Ekle</h2>
-            <p>Bugun yaptigin iyiligi yaz, topluluga ilham olsun.</p>
+        <main className="body">
+          <section className="compose glass">
+            <h2 className="section-title">Iyilik Ekle</h2>
+            <p className="section-sub">Bugun ne yaptigini net ve kisa yaz.</p>
 
             <form onSubmit={submit}>
               <div className="field">
-                <label>Isim</label>
+                <label className="label">Isim</label>
                 <input
                   className="input"
                   value={form.isim}
@@ -688,7 +706,7 @@ export default function App() {
               </div>
 
               <div className="field">
-                <label>Soyisim</label>
+                <label className="label">Soyisim</label>
                 <input
                   className="input"
                   value={form.soyisim}
@@ -698,38 +716,38 @@ export default function App() {
               </div>
 
               <div className="field">
-                <label>Yaptigin Iyilik</label>
+                <label className="label">Yapilan Iyilik</label>
                 <textarea
                   className="textarea"
                   value={form.iyilik}
                   onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
                   maxLength={CONFIG.MAX_IYILIK_LENGTH}
-                  placeholder="Kisa ve net bir cumleyle yaz"
+                  placeholder="Ornek: Yasli komsuma alisveriste yardim ettim"
                 />
               </div>
 
-              <button className="submit" disabled={submitting} type="submit">
+              <button type="submit" className="submit" disabled={submitting}>
                 {submitting ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
 
-              {error ? <div className="msg error">{error}</div> : null}
-              {success ? <div className="msg success">{success}</div> : null}
+              {error ? <div className="message error">{error}</div> : null}
+              {success ? <div className="message success">{success}</div> : null}
             </form>
 
-            <div className="tip">Not: Mesajlar otomatik filtrelenir, ayni icerik tekrarina izin verilmez.</div>
+            <div className="tip">Not: Uygunsuz metinler filtrelenir, tekrar eden gonderiler engellenir.</div>
           </section>
 
-          <section className="panel right">
+          <section className="feed glass">
             <div className="feed-head">
               <div>
-                <h2>Iyilik Akisi</h2>
-                <div className="feed-sub">Toplam kayit: {items.length}</div>
+                <h2 className="section-title">Iyilik Akisi</h2>
+                <div className="feed-count">Toplam kayit: {items.length}</div>
               </div>
 
               <div className="leaders">
-                {leaderboard.map((person, idx) => (
-                  <div className="leader" key={person.name}>
-                    {idx + 1}. {person.name}
+                {leaderboard.map((person, i) => (
+                  <div className="leader-pill" key={person.name}>
+                    {i + 1}. {person.name}
                     <strong>{person.count}</strong>
                   </div>
                 ))}
@@ -743,9 +761,9 @@ export default function App() {
                 <div className="empty">Henuz kayit yok. Ilk iyiligi sen ekle.</div>
               ) : (
                 items.map((item) => (
-                  <article className="row" key={item.id}>
-                    <div className="row-main">
-                      <div className="avatar">{initials(item.isim, item.soyisim)}</div>
+                  <article className="item" key={item.id}>
+                    <div className="item-main">
+                      <div className="avatar">{getInitials(item.isim, item.soyisim)}</div>
                       <div>
                         <div className="name">{item.isim} {item.soyisim}</div>
                         <div className="text">{item.iyilik}</div>

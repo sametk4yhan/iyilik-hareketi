@@ -1,17 +1,17 @@
 // =============================================================================
-// İYİLİK HAREKETİ - Config
+// IYILIK HAREKETI - Config
 // =============================================================================
 
 export const CONFIG = {
-  // ⚠️ BU URL'İ KENDİ WORKER URL'İNLE DEĞİŞTİR!
+  // Cloudflare Worker URL
   WORKER_URL: 'https://iyilik-api.iyilikhareketi.workers.dev',
-  
-  // Spam koruması
-  SPAM_COOLDOWN_MS: 30000, // 30 saniye bekleme
-  
+
+  // Spam korumasi
+  SPAM_COOLDOWN_MS: 30000,
+
   // Karakter limiti
   MAX_IYILIK_LENGTH: 150,
-  
-  // Ramazan 2025 başlangıcı
-  RAMAZAN_START: '2025-03-01T00:00:00',
+
+  // Ramazan 2026 baslangici (Turkiye): 19 Subat 2026
+  RAMAZAN_START: '2026-02-19T00:00:00+03:00',
 };
