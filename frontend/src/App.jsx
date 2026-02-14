@@ -1282,8 +1282,16 @@ function RamazanPremiumUIInner() {
         }
 
         @media (max-width: 1024px) {
-          .countdown, .niyet, .form-card, .flow-card, .leaderboard-card, .stats-card {
+          .countdown, .niyet, .form-card, .flow-card, .leaderboard-card, .stats-card, .share-card {
             grid-column: span 12;
+          }
+
+          .share-card .share-buttons {
+            flex-direction: column;
+          }
+          .share-card .share-buttons .btn {
+            width: 100%;
+            min-width: unset;
           }
 
           .count-item strong { font-size: 44px; }
@@ -1482,7 +1490,7 @@ function RamazanPremiumUIInner() {
               <p style={{ fontSize: '13px', color: '#8ea0be', marginBottom: '16px' }}>
                 İyilik hareketini yay, başkalarına ilham ver!
               </p>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <div className="share-buttons" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                 <button
                   onClick={() => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent('Ramazan\'da iyilik hareketi başlattım! Sen de katıl 🌙')}&url=${encodeURIComponent('https://iyilikhareketi.online')}`, '_blank')}
                   className="btn"
