@@ -1,124 +1,168 @@
-# Iyilik Hareketi
+# 🌙 İyilik Hareketi
 
-Ramazan ayının dayanışma ruhunu dijital bir alana taşıyan, topluluk odaklı bir iyilik takip platformu.
+<p align="center">
+  <img src="https://img.shields.io/badge/Ramazan-2026-gold?style=for-the-badge" alt="Ramazan 2026" />
+  <img src="https://img.shields.io/badge/React-18-blue?style=for-the-badge&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Cloudflare-Workers-orange?style=for-the-badge&logo=cloudflare" alt="Cloudflare Workers" />
+  <img src="https://img.shields.io/badge/Upstash-Redis-red?style=for-the-badge" alt="Upstash Redis" />
+</p>
 
-İnsanlar yaptıkları iyilikleri isim ve kısa açıklama ile paylaşır; kayıtlar herkese açık listede en yeni üstte görünecek şekilde akar. Amaç yalnızca kayıt tutmak değil, iyiliği görünür kılarak daha fazla kişiyi harekete geçirmektir.
+<p align="center">
+  <b>Ramazan'da iyilik hareketi başlat. Yaptığın iyilikleri kaydet, başkalarına ilham ver.</b>
+</p>
 
-## Neden önemli?
+<p align="center">
+  <a href="https://iyilikhareketi.online">🔗 iyilikhareketi.online</a>
+</p>
 
-- İyilik davranışını görünür hale getirir.
-- Topluluk içinde olumlu örnek etkisi oluşturur.
-- Ramazan ruhuna uygun şekilde yardımlaşmayı teşvik eder.
-- Küçük adımların birikerek büyük sosyal etki üretebileceğini hatırlatır.
+---
 
-## Özellikler
+## ✨ Özellikler
 
-- Dijital saat ve Ramazan geri sayımı
-- İsim, soyisim ve iyilik metni ile kayıt
-- En yeni kaydın üstte kaldığı akış listesi
-- En çok iyilik yapanlar leaderboard alanı
-- Basit anti-spam koruması
-- Uygunsuz içerik için temel filtreleme
+- 🕐 **Ramazan'a Geri Sayım** - Canlı geri sayım sayacı
+- 📝 **İyilik Kaydet** - Yaptığın iyilikleri kolayca kaydet
+- 🌊 **İyilik Akışı** - Topluluktan gelen iyilikleri gerçek zamanlı gör
+- 🏆 **Liderlik Tablosu** - En çok iyilik yapanlar
+- 📊 **Canlı İstatistikler** - Bugün, bu hafta, toplam iyilik sayıları
+- 🌙 **Günün Niyeti** - Her gün yeni bir ilham verici söz
+- ⭐ **Yıldız Animasyonları** - Gece temalı atmosferik tasarım
+- 🎉 **Confetti Efekti** - İyilik ekleyince kutlama
+- 🛡️ **Spam Koruması** - Küfür filtresi + rate limiting
+- 📱 **Mobil Uyumlu** - Tüm cihazlarda çalışır
 
-## Teknoloji
+---
 
-- Frontend: React + Vite
-- API: Cloudflare Worker
-- Veri katmanı: Upstash Redis
+## 🛠️ Teknolojiler
 
-## Proje yapısı
+| Katman | Teknoloji |
+|--------|-----------|
+| **Frontend** | React 18 + Vite |
+| **Backend** | Cloudflare Workers |
+| **Database** | Upstash Redis |
+| **Hosting** | Cloudflare Pages |
+| **Domain** | Cloudflare DNS |
 
-```text
-iyilik-hareketi/
-├── frontend/
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── config.js
-│   │   └── main.jsx
-│   ├── package.json
-│   └── vite.config.js
-├── worker/
-│   ├── index.js
-│   ├── wrangler.toml
-│   └── package.json
-└── README.md
+---
+
+## 🚀 Kurulum
+
+### Gereksinimler
+
+- Node.js 18+
+- npm veya yarn
+- Cloudflare hesabı
+- Upstash hesabı
+
+### 1. Repo'yu Klonla
+
+```bash
+git clone https://github.com/sametk4yhan/iyilik-hareketi.git
+cd iyilik-hareketi
 ```
 
-## Hızlı kurulum
+### 2. Upstash Redis Kur
 
-### 1) Upstash Redis
+1. [console.upstash.com](https://console.upstash.com) adresine git
+2. Yeni database oluştur (Region: `eu-west-1`)
+3. REST API bilgilerini kopyala
 
-1. [Upstash Console](https://console.upstash.com) üzerinden Redis DB oluştur.
-2. `UPSTASH_REDIS_REST_URL` ve `UPSTASH_REDIS_REST_TOKEN` değerlerini al.
-
-### 2) Cloudflare Worker
+### 3. Cloudflare Worker Kur
 
 ```bash
 cd worker
 npm install
-wrangler login
-wrangler secret put UPSTASH_REDIS_REST_URL
-wrangler secret put UPSTASH_REDIS_REST_TOKEN
-wrangler deploy
+npx wrangler login
+npx wrangler secret put UPSTASH_REDIS_REST_URL
+npx wrangler secret put UPSTASH_REDIS_REST_TOKEN
+npx wrangler deploy
 ```
 
-Deploy sonrası Worker URL’i örneği:
-
-```text
-https://iyilik-api.<subdomain>.workers.dev
-```
-
-### 3) Frontend ayarı
+### 4. Frontend Kur
 
 ```bash
 cd frontend
 npm install
 ```
 
-`frontend/src/config.js` içinde Worker URL’ini güncelle:
+`src/config.js` dosyasında Worker URL'ini güncelle:
 
-```js
-WORKER_URL: 'https://iyilik-api.<subdomain>.workers.dev'
+```javascript
+export const CONFIG = {
+  WORKER_URL: 'https://iyilik-api.YOUR_SUBDOMAIN.workers.dev',
+  // ...
+};
 ```
 
-Lokal çalıştırma:
+### 5. Çalıştır
 
 ```bash
 npm run dev
 ```
 
-Build:
+Tarayıcıda `http://localhost:5173` adresini aç.
 
-```bash
-npm run build
+---
+
+## 📁 Proje Yapısı
+
+```
+iyilik-hareketi/
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx          # Ana uygulama
+│   │   ├── config.js        # Konfigürasyon
+│   │   └── main.jsx         # Entry point
+│   ├── public/
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+├── worker/
+│   ├── index.js             # Cloudflare Worker API
+│   ├── wrangler.toml        # Worker config
+│   └── package.json
+└── README.md
 ```
 
-## Deploy
+---
 
-### Netlify (önerilen hızlı yol)
+## 🔒 Güvenlik
 
-- `frontend/dist` klasörünü [Netlify Drop](https://app.netlify.com/drop) sayfasına sürükle-bırak.
+- **Küfür Filtresi**: Türkçe küfür ve hakaret kalıpları otomatik engellenir
+- **Rate Limiting**: IP başına istek limiti
+- **Duplicate Check**: Aynı içeriğin tekrar gönderilmesi engellenir
+- **Input Validation**: Tüm girişler doğrulanır
 
-### Git tabanlı deploy
+---
 
-- Netlify üzerinde repo bağla.
-- Base directory: `frontend`
-- Build command: `npm run build`
-- Publish directory: `dist`
+## 🤝 Katkıda Bulun
 
-## Güvenlik notları
+Katkılarınızı bekliyoruz! 
 
-- Secret değerleri (`UPSTASH_REDIS_REST_TOKEN` vb.) repoya push edilmemelidir.
-- Secret’ları yalnızca `wrangler secret put` ile tanımlayın.
-- `.env` ve benzeri hassas dosyaları versiyonlamayın.
+1. Fork'la
+2. Feature branch oluştur (`git checkout -b feature/yeni-ozellik`)
+3. Commit'le (`git commit -m 'Yeni özellik eklendi'`)
+4. Push'la (`git push origin feature/yeni-ozellik`)
+5. Pull Request aç
 
-## Yol haritası
+---
 
-- Admin onay paneli
-- Gelişmiş moderasyon (opsiyonel AI kontrol)
-- Günlük kişi bazlı limit yönetimi
-- İleri seviye raporlama ve istatistikler
+## 📝 Lisans
 
-## Lisans
+MIT License - Dilediğiniz gibi kullanabilirsiniz.
 
-Bu proje kişisel/deneysel kullanım için hazırlanmıştır. Üretim kullanımında uygun lisans ve KVKK gereksinimlerini ayrıca değerlendirin.
+---
+
+## 💬 İletişim
+
+- **Twitter/X**: [@sametk4yhan](https://twitter.com/sametk4yhan)
+- **Website**: [iyilikhareketi.online](https://iyilikhareketi.online)
+
+---
+
+<p align="center">
+  <b>Her iyilik bir ışıktır 🌙</b>
+</p>
+
+<p align="center">
+  Made with ❤️ for Ramazan 2026
+</p>
