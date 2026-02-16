@@ -1046,10 +1046,7 @@ function RamazanPremiumUIInner() {
         .item-text {
           font-size: 14px;
           color: #94a3b8;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 520px;
+          word-break: break-word;
         }
 
         .item-time {
