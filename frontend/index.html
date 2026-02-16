@@ -11,9 +11,32 @@
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Iyilik Hareketi | Ramazan 2026</title>
-    <meta name="description" content="Ramazan boyunca yapilan iyilikleri kaydet ve toplulukla paylas." />
+    <title>İyilik Hareketi | Ramazan 2026</title>
+    <meta name="description" content="Ramazan boyunca yaptığın iyilikleri kaydet, başkalarına ilham ver. 30 günde 30 iyilik fikriyle her gün bir iyilik yap!" />
     <meta name="theme-color" content="#020617" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="ramazan, iyilik, hayır, sadaka, yardım, topluluk, iyilik hareketi, ramazan 2026, iyilik fikirleri, 30 günde 30 iyilik" />
+    <meta name="author" content="İyilik Hareketi" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://iyilikhareketi.online/" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://iyilikhareketi.online/" />
+    <meta property="og:title" content="İyilik Hareketi | Ramazan 2026" />
+    <meta property="og:description" content="Ramazan boyunca yaptığın iyilikleri kaydet, başkalarına ilham ver. 30 günde 30 iyilik!" />
+    <meta property="og:image" content="https://iyilikhareketi.online/og-image.png" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta property="og:site_name" content="İyilik Hareketi" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://iyilikhareketi.online/" />
+    <meta name="twitter:title" content="İyilik Hareketi | Ramazan 2026" />
+    <meta name="twitter:description" content="Ramazan boyunca yaptığın iyilikleri kaydet, başkalarına ilham ver." />
+    <meta name="twitter:image" content="https://iyilikhareketi.online/og-image.png" />
+
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☽</text></svg>"
@@ -75,29 +98,24 @@
         </div>
       </div>
     </div>
-
     <script>
       (function () {
         var fallback = document.getElementById('boot-fallback');
         var errorBox = document.getElementById('boot-error');
-
         function showError(msg) {
           if (!fallback || !errorBox) return;
           fallback.setAttribute('data-error', '1');
           errorBox.textContent = String(msg || 'Bilinmeyen hata');
         }
-
         window.addEventListener('error', function (e) {
           showError((e && e.message) || 'Script hata verdi');
         });
-
         window.addEventListener('unhandledrejection', function (e) {
           var reason = e && e.reason;
           showError(reason && reason.message ? reason.message : reason);
         });
       })();
     </script>
-
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
