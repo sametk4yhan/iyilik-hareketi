@@ -1281,6 +1281,10 @@ function RamazanPremiumUIInner() {
           color: #b7c2d7;
         }
 
+        .share-card {
+          grid-column: span 4;
+        }
+
         @media (max-width: 1024px) {
           .countdown, .niyet, .form-card, .flow-card, .leaderboard-card, .stats-card, .share-card {
             grid-column: span 12;
@@ -1380,7 +1384,7 @@ function RamazanPremiumUIInner() {
                 />
                 <textarea
                   className="textarea"
-                  placeholder="Bugün ne yaptın?"
+                  placeholder="Bugün nasıl bir iyilik yaptın?"
                   value={form.iyilik}
                   onChange={(e) => setForm((prev) => ({ ...prev, iyilik: e.target.value }))}
                 />
@@ -1485,7 +1489,7 @@ function RamazanPremiumUIInner() {
             </section>
 
             {/* Sosyal Medya Paylaşım */}
-            <section className="glass-card share-card" style={{ gridColumn: 'span 4' }}>
+            <section className="glass-card share-card">
               <h3 className="section-title mini">Paylaş</h3>
               <p style={{ fontSize: '13px', color: '#8ea0be', marginBottom: '16px' }}>
                 İyilik hareketini yay, başkalarına ilham ver!
