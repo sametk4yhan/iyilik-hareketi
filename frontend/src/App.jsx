@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import html2canvas from 'html2canvas';
 import { CONFIG } from './config';
 
 function getCountdownParts(targetDate) {
@@ -133,6 +134,78 @@ function StarsBackground() {
   );
 }
 
+// Share Card Modal Component
+function ShareCardModal({ iyilik, isim, soyisim, tarih, onClose }) {
+  const cardRef = React.useRef(null);
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    return d.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' });
+  };
+
+  const downloadCard = async () => {
+    if (!cardRef.current) return;
+    try {
+      const canvas = await html2canvas(cardRef.current, { backgroundColor: null, scale: 2 });
+      const link = document.createElement('a');
+      link.download = `iyilik-${Date.now()}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      alert('Kart indirilemedi. Ekran görüntüsü alabilirsiniz.');
+    }
+  };
+
+  const shareToTwitter = () => {
+    const text = `🌙 "${iyilik}"\n\nRamazan'da iyilik hareketi!\n`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://iyilikhareketi.online')}`, '_blank');
+  };
+
+  const shareToWhatsApp = () => {
+    const text = `🌙 *İyilik Hareketi*\n\n"${iyilik}"\n\n— ${isim} ${soyisim}\n\nSen de katıl: https://iyilikhareketi.online`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  return (
+    <div className="share-overlay" onClick={onClose}>
+      <div className="share-modal" onClick={(e) => e.stopPropagation()}>
+        <button className="share-close" onClick={onClose}>×</button>
+        <h3 className="share-title">İyiliğini Paylaş! 🎉</h3>
+        
+        <div className="share-card-wrapper">
+          <div ref={cardRef} className="share-card-preview">
+            <div className="scp-header">
+              <span className="scp-moon">🌙</span>
+              <span className="scp-brand">İyilik Hareketi</span>
+            </div>
+            <div className="scp-content">
+              <p className="scp-iyilik">"{iyilik}"</p>
+            </div>
+            <div className="scp-footer">
+              <div className="scp-author">
+                <div className="scp-avatar">{getInitials(isim, soyisim)}</div>
+                <div>
+                  <div className="scp-name">{isim} {soyisim}</div>
+                  <div className="scp-date">{formatDate(tarih)}</div>
+                </div>
+              </div>
+              <div className="scp-url">iyilikhareketi.online</div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="share-buttons-grid">
+          <button className="share-btn download" onClick={downloadCard}>📥 İndir</button>
+          <button className="share-btn twitter" onClick={shareToTwitter}>𝕏 Twitter</button>
+          <button className="share-btn whatsapp" onClick={shareToWhatsApp}>💬 WhatsApp</button>
+          <button className="share-btn copy" onClick={() => { navigator.clipboard.writeText('https://iyilikhareketi.online'); alert('Link kopyalandı!'); }}>🔗 Kopyala</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
 // Skeleton loader component
 function SkeletonItem() {
   return (
@@ -255,6 +328,10 @@ function RamazanPremiumUIInner() {
   const [adminStatus, setAdminStatus] = useState({ type: '', message: '' });
   const [pendingItems, setPendingItems] = useState([]);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
+  const [shareData, setShareData] = useState(null);
+  const [currentPage, setCurrentPage] = useState('home');
+  const [prefillIyilik, setPrefillIyilik] = useState('');
 
   // Gece/gündüz teması
   const isDayTime = useMemo(() => {
@@ -529,6 +606,17 @@ function RamazanPremiumUIInner() {
 
       setForm({ isim: '', soyisim: '', iyilik: '' });
       setSuccess(data.pending ? 'İçerik onaya gönderildi.' : 'İyilik kaydedildi.');
+
+      // Paylaşım kartını göster
+      if (!data.pending) {
+        setShareData({
+          iyilik: iyilik,
+          isim: isim,
+          soyisim: soyisim.charAt(0) + '.',
+          tarih: new Date().toISOString()
+        });
+        setTimeout(() => setShowShareCard(true), 1500);
+      }
       
       // Confetti göster
       if (!data.pending) {
@@ -1298,6 +1386,147 @@ function RamazanPremiumUIInner() {
           .count-item strong { font-size: 44px; }
           .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
+          /* Share Card Modal */
+.share-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.9);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.share-modal {
+  background: linear-gradient(135deg, #0a1628, #0f172a);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  padding: 32px;
+  max-width: 440px;
+  width: 100%;
+  position: relative;
+}
+
+.share-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.share-title {
+  font-size: 22px;
+  font-weight: 800;
+  color: #f8fafc;
+  margin: 0 0 20px;
+  text-align: center;
+}
+
+.share-card-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.share-card-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  background: linear-gradient(135deg, #020617, #0a1628);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.scp-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scp-moon { font-size: 24px; }
+
+.scp-brand {
+  font-size: 16px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #f5e6a3, #d4af37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.scp-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scp-iyilik {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f8fafc;
+  text-align: center;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.scp-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.scp-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scp-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #3b82f6, #f59e0b);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 14px;
+}
+
+.scp-name { font-size: 13px; font-weight: 700; color: #f1f5f9; }
+.scp-date { font-size: 11px; color: #64748b; }
+.scp-url { font-size: 11px; color: #d4af37; font-weight: 700; }
+
+.share-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.share-btn {
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.share-btn.download { background: linear-gradient(135deg, #f5e6a3, #d4af37); color: #0f172a; }
+.share-btn.twitter { background: #1DA1F2; color: #fff; }
+.share-btn.whatsapp { background: #25D366; color: #fff; }
+.share-btn.copy { background: rgba(255,255,255,0.1); color: #f8fafc; }
       `}</style>
 
       <StarsBackground />
@@ -1518,6 +1747,17 @@ function RamazanPremiumUIInner() {
           </div>
 
           <footer className="footer">İyilikle Kalın • 2026</footer>
+
+{showShareCard && shareData && (
+  <ShareCardModal
+    iyilik={shareData.iyilik}
+    isim={shareData.isim}
+    soyisim={shareData.soyisim}
+    tarih={shareData.tarih}
+    onClose={() => { setShowShareCard(false); setShareData(null); }}
+  />
+)}
+
         </main>
       )}
     </div>
