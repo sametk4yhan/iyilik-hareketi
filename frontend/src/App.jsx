@@ -228,6 +228,116 @@ function ShareCardModal({ iyilik, isim, soyisim, tarih, onClose }) {
 }
 
 
+const IYILIK_FIKIRLERI = [
+  { gun: 1, baslik: 'Selam Ver', aciklama: 'Tanımadığın birine gülümseyerek selam ver.', kategori: 'sosyal' },
+  { gun: 2, baslik: 'Yaşlıya Yardım', aciklama: 'Markette veya sokakta bir yaşlıya yardım et.', kategori: 'yardım' },
+  { gun: 3, baslik: 'Aile Ziyareti', aciklama: 'Uzun süredir görmediğin bir akrabanı ara veya ziyaret et.', kategori: 'aile' },
+  { gun: 4, baslik: 'Sadaka Ver', aciklama: 'İhtiyaç sahibine küçük de olsa bir bağışta bulun.', kategori: 'maddi' },
+  { gun: 5, baslik: 'Ağaç Dik', aciklama: 'Bir fidan veya çiçek dik, doğaya katkıda bulun.', kategori: 'çevre' },
+  { gun: 6, baslik: 'Dua Et', aciklama: 'Tanıdığın veya tanımadığın biri için içten bir dua et.', kategori: 'manevi' },
+  { gun: 7, baslik: 'Yemek Ikram Et', aciklama: 'Komşuna veya bir ihtiyaç sahibine yemek ikram et.', kategori: 'yardım' },
+  { gun: 8, baslik: 'Teşekkür Et', aciklama: 'Hayatındaki birine neden minnettarsın söyle.', kategori: 'sosyal' },
+  { gun: 9, baslik: 'Çöp Topla', aciklama: 'Parkta veya sokakta gördüğün çöpleri topla.', kategori: 'çevre' },
+  { gun: 10, baslik: 'Anne-Babayı Ara', aciklama: 'Anne veya babanı ara, hal hatır sor.', kategori: 'aile' },
+  { gun: 11, baslik: 'Kitap Hediye Et', aciklama: 'Okuduğun güzel bir kitabı birine hediye et.', kategori: 'sosyal' },
+  { gun: 12, baslik: 'Esnafa Dua Et', aciklama: 'Alışveriş yaptığın esnafa "Allah bereket versin" de.', kategori: 'manevi' },
+  { gun: 13, baslik: 'Kapıyı Tut', aciklama: 'Arkandan gelen kişi için kapıyı tut.', kategori: 'sosyal' },
+  { gun: 14, baslik: 'Market Alışverişi', aciklama: 'İhtiyaç sahibi bir aileye market alışverişi yap.', kategori: 'maddi' },
+  { gun: 15, baslik: 'Su Bırak', aciklama: 'Sokak hayvanları için su ve mama bırak.', kategori: 'çevre' },
+  { gun: 16, baslik: 'Hasta Ziyareti', aciklama: 'Hasta bir tanıdığını ziyaret et veya ara.', kategori: 'yardım' },
+  { gun: 17, baslik: 'Kuran Oku', aciklama: 'Bir sayfa Kuran oku ve sevabını bir yakınına hediye et.', kategori: 'manevi' },
+  { gun: 18, baslik: 'Yol Tarifi', aciklama: 'Kaybolmuş birine yol tarif et veya eşlik et.', kategori: 'sosyal' },
+  { gun: 19, baslik: 'Kıyafet Bağışla', aciklama: 'Giymediğin temiz kıyafetleri ihtiyaç sahiplerine bağışla.', kategori: 'maddi' },
+  { gun: 20, baslik: 'Kardeşinle Vakit Geçir', aciklama: 'Kardeşin veya yeğeninle kaliteli vakit geçir.', kategori: 'aile' },
+  { gun: 21, baslik: 'Bahşiş Bırak', aciklama: 'Garson veya kurye için cömert bir bahşiş bırak.', kategori: 'maddi' },
+  { gun: 22, baslik: 'Affet', aciklama: 'Kırgın olduğun birini içten affet, barış.', kategori: 'manevi' },
+  { gun: 23, baslik: 'Çay Ismarla', aciklama: 'İş arkadaşına veya komşuna çay-kahve ısmarla.', kategori: 'sosyal' },
+  { gun: 24, baslik: 'Geri Dönüşüm', aciklama: 'Evdeki atıkları ayırıp geri dönüşüme gönder.', kategori: 'çevre' },
+  { gun: 25, baslik: 'Büyüklerine Saygı', aciklama: 'Büyüklerinin elini öp, hayır duasını al.', kategori: 'aile' },
+  { gun: 26, baslik: 'Kan Bağışı', aciklama: 'Kan bağışında bulun veya bağış noktasını paylaş.', kategori: 'yardım' },
+  { gun: 27, baslik: 'İftar Ver', aciklama: 'Birini iftara davet et veya iftar paketi hazırla.', kategori: 'yardım' },
+  { gun: 28, baslik: 'Tebessüm Et', aciklama: 'Gün boyu karşılaştığın herkese samimi gülümse.', kategori: 'manevi' },
+  { gun: 29, baslik: 'Fidan Bağışla', aciklama: 'Online olarak bir fidan bağışı yap.', kategori: 'çevre' },
+  { gun: 30, baslik: 'İyilik Zinciri', aciklama: 'Bugün yaptığın iyiliği paylaş, başkalarına ilham ver!', kategori: 'sosyal' },
+];
+
+const KATEGORI_RENKLERI = {
+  sosyal: { bg: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', label: 'Sosyal' },
+  yardım: { bg: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', label: 'Yardım' },
+  aile: { bg: 'rgba(236, 72, 153, 0.15)', color: '#f472b6', label: 'Aile' },
+  manevi: { bg: 'rgba(139, 92, 246, 0.15)', color: '#a78bfa', label: 'Manevi' },
+  çevre: { bg: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', label: 'Çevre' },
+  maddi: { bg: 'rgba(212, 175, 55, 0.15)', color: '#d4af37', label: 'Maddi' },
+};
+
+function IyilikFikirleri({ onBack, onSelect }) {
+  const [aktifKategori, setAktifKategori] = useState('hepsi');
+
+  const filtrelenmis = aktifKategori === 'hepsi'
+    ? IYILIK_FIKIRLERI
+    : IYILIK_FIKIRLERI.filter((f) => f.kategori === aktifKategori);
+
+  return (
+    <main className="container">
+      <div style={{ marginBottom: '32px' }}>
+        <button className="btn" onClick={onBack} style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.06)', fontSize: '13px', padding: '8px 16px' }}>
+          ← Geri
+        </button>
+        <h2 style={{ fontSize: '28px', fontWeight: 800, color: '#f8fafc', margin: '0 0 8px' }}>
+          30 Günde 30 İyilik
+        </h2>
+        <p style={{ fontSize: '14px', color: '#8ea0be', margin: 0 }}>
+          Her gün bir iyilik yaparak Ramazan'ı anlamlı kıl
+        </p>
+      </div>
+
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '24px' }}>
+        {[{ key: 'hepsi', label: 'Hepsi' }, ...Object.entries(KATEGORI_RENKLERI).map(([k, v]) => ({ key: k, label: v.label }))].map((k) => (
+          <button
+            key={k.key}
+            onClick={() => setAktifKategori(k.key)}
+            className="btn"
+            style={{
+              padding: '6px 14px',
+              fontSize: '12px',
+              fontWeight: 700,
+              background: aktifKategori === k.key ? 'rgba(212, 175, 55, 0.25)' : 'rgba(255,255,255,0.06)',
+              border: aktifKategori === k.key ? '1px solid rgba(212, 175, 55, 0.4)' : '1px solid transparent',
+              color: aktifKategori === k.key ? '#d4af37' : '#8ea0be',
+            }}
+          >
+            {k.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="fikirler-grid">
+        {filtrelenmis.map((fikir) => {
+          const kat = KATEGORI_RENKLERI[fikir.kategori];
+          return (
+            <div key={fikir.gun} className="glass-card fikir-card">
+              <div className="fikir-header">
+                <span className="fikir-gun">Gün {fikir.gun}</span>
+                <span className="fikir-kategori" style={{ background: kat.bg, color: kat.color }}>{kat.label}</span>
+              </div>
+              <h4 className="fikir-baslik">{fikir.baslik}</h4>
+              <p className="fikir-aciklama">{fikir.aciklama}</p>
+              <button
+                className="btn fikir-btn"
+                onClick={() => onSelect(fikir.baslik + ' - ' + fikir.aciklama)}
+              >
+                Bu İyiliği Yap →
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      <footer className="footer" style={{ marginTop: '48px' }}>İyilikle Kalın • 2026</footer>
+    </main>
+  );
+}
+
 // Skeleton loader component
 function SkeletonItem() {
   return (
@@ -1479,6 +1589,70 @@ function RamazanPremiumUIInner() {
 .share-btn.twitter { background: #1DA1F2; color: #fff; }
 .share-btn.whatsapp { background: #25D366; color: #fff; }
 .share-btn.copy { background: rgba(255,255,255,0.1); color: #f8fafc; }
+
+        /* Fikirler sayfası */
+        .fikirler-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+          gap: 16px;
+        }
+
+        .fikir-card {
+          display: flex;
+          flex-direction: column;
+          padding: 20px;
+        }
+
+        .fikir-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+
+        .fikir-gun {
+          font-size: 11px;
+          font-weight: 800;
+          color: #d4af37;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+
+        .fikir-kategori {
+          font-size: 10px;
+          font-weight: 700;
+          padding: 3px 10px;
+          border-radius: 99px;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+        }
+
+        .fikir-baslik {
+          font-size: 17px;
+          font-weight: 800;
+          color: #f1f5f9;
+          margin: 0 0 6px;
+        }
+
+        .fikir-aciklama {
+          font-size: 13px;
+          color: #8ea0be;
+          line-height: 1.5;
+          margin: 0 0 16px;
+          flex: 1;
+        }
+
+        .fikir-btn {
+          font-size: 12px;
+          padding: 8px 0;
+          background: rgba(212, 175, 55, 0.12);
+          color: #d4af37;
+          border: 1px solid rgba(212, 175, 55, 0.2);
+          text-align: center;
+        }
+        .fikir-btn:hover {
+          background: rgba(212, 175, 55, 0.25);
+        }
       `}</style>
 
       <StarsBackground />
@@ -1498,6 +1672,14 @@ function RamazanPremiumUIInner() {
           onRefresh={fetchPending}
           onApprove={approvePending}
           onReject={rejectPending}
+        />
+      ) : currentPage === 'fikirler' ? (
+        <IyilikFikirleri
+          onBack={() => setCurrentPage('home')}
+          onSelect={(text) => {
+            setForm((prev) => ({ ...prev, iyilik: text }));
+            setCurrentPage('home');
+          }}
         />
       ) : (
         <main className="container">
@@ -1580,6 +1762,14 @@ function RamazanPremiumUIInner() {
 
               {error ? <div className="status error">{error}</div> : null}
               {success ? <div className="status ok">{success}</div> : null}
+              <button
+                className="btn"
+                type="button"
+                onClick={() => setCurrentPage('fikirler')}
+                style={{ marginTop: '10px', background: 'rgba(212, 175, 55, 0.12)', color: '#d4af37', border: '1px solid rgba(212, 175, 55, 0.2)', fontSize: '13px', width: '100%' }}
+              >
+                💡 İyilik Fikri Al
+              </button>
             </section>
 
             <section className="glass-card flow-card">
