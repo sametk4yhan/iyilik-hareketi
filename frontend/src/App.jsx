@@ -146,7 +146,7 @@ function ShareCardModal({ iyilik, isim, soyisim, tarih, onClose }) {
   const downloadCard = async () => {
     if (!cardRef.current) return;
     try {
-      const canvas = await html2canvas(cardRef.current, { backgroundColor: null, scale: 2 });
+      const canvas = await html2canvas(cardRef.current, { backgroundColor: '#020617', scale: 2, useCORS: true });
       const link = document.createElement('a');
       link.download = `iyilik-${Date.now()}.png`;
       link.href = canvas.toDataURL('image/png');
@@ -173,23 +173,45 @@ function ShareCardModal({ iyilik, isim, soyisim, tarih, onClose }) {
         <h3 className="share-title">İyiliğini Paylaş! 🎉</h3>
         
         <div className="share-card-wrapper">
-          <div ref={cardRef} className="share-card-preview">
-            <div className="scp-header">
-              <span className="scp-moon">🌙</span>
-              <span className="scp-brand">İyilik Hareketi</span>
+          <div ref={cardRef} style={{
+            width: '376px',
+            height: '376px',
+            background: 'linear-gradient(135deg, #020617, #0a1628)',
+            borderRadius: '16px',
+            padding: '24px',
+            display: 'flex',
+            flexDirection: 'column',
+            boxSizing: 'border-box',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '0' }}>
+              <span style={{ fontSize: '24px', marginRight: '10px' }}>🌙</span>
+              <span style={{ fontSize: '16px', fontWeight: 800, color: '#d4af37' }}>İyilik Hareketi</span>
             </div>
-            <div className="scp-content">
-              <p className="scp-iyilik">"{iyilik}"</p>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <p style={{ fontSize: '18px', fontWeight: 700, color: '#f8fafc', textAlign: 'center', lineHeight: '1.4', margin: 0 }}>"{iyilik}"</p>
             </div>
-            <div className="scp-footer">
-              <div className="scp-author">
-                <div className="scp-avatar">{getInitials(isim, soyisim)}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', alignItems: 'center' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #3b82f6, #f59e0b)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontWeight: 800,
+                  fontSize: '14px',
+                  marginRight: '10px',
+                  flexShrink: 0,
+                }}>{getInitials(isim, soyisim)}</div>
                 <div>
-                  <div className="scp-name">{isim} {soyisim}</div>
-                  <div className="scp-date">{formatDate(tarih)}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#f1f5f9' }}>{isim} {soyisim}</div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>{formatDate(tarih)}</div>
                 </div>
               </div>
-              <div className="scp-url">iyilikhareketi.online</div>
+              <div style={{ fontSize: '11px', color: '#d4af37', fontWeight: 700 }}>iyilikhareketi.online</div>
             </div>
           </div>
         </div>
@@ -1437,76 +1459,6 @@ function RamazanPremiumUIInner() {
   margin-bottom: 20px;
 }
 
-.share-card-preview {
-  width: 100%;
-  aspect-ratio: 1;
-  background: linear-gradient(135deg, #020617, #0a1628);
-  border-radius: 16px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-}
-
-.scp-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.scp-moon { font-size: 24px; }
-
-.scp-brand {
-  font-size: 16px;
-  font-weight: 800;
-  background: linear-gradient(135deg, #f5e6a3, #d4af37);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.scp-content {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.scp-iyilik {
-  font-size: 18px;
-  font-weight: 700;
-  color: #f8fafc;
-  text-align: center;
-  line-height: 1.4;
-  margin: 0;
-}
-
-.scp-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-}
-
-.scp-author {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.scp-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #3b82f6, #f59e0b);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-weight: 800;
-  font-size: 14px;
-}
-
-.scp-name { font-size: 13px; font-weight: 700; color: #f1f5f9; }
-.scp-date { font-size: 11px; color: #64748b; }
-.scp-url { font-size: 11px; color: #d4af37; font-weight: 700; }
 
 .share-buttons-grid {
   display: grid;
