@@ -1747,18 +1747,17 @@ function RamazanPremiumUIInner() {
           </div>
 
           <footer className="footer">İyilikle Kalın • 2026</footer>
-
-{showShareCard && shareData && (
-  <ShareCardModal
-    iyilik={shareData.iyilik}
-    isim={shareData.isim}
-    soyisim={shareData.soyisim}
-    tarih={shareData.tarih}
-    onClose={() => { setShowShareCard(false); setShareData(null); }}
-  />
-)}
-
         </main>
+      )}
+
+      {showShareCard && shareData && (
+        <ShareCardModal
+          iyilik={shareData.iyilik}
+          isim={shareData.isim}
+          soyisim={shareData.soyisim}
+          tarih={shareData.tarih}
+          onClose={() => { setShowShareCard(false); setShareData(null); }}
+        />
       )}
     </div>
   );
