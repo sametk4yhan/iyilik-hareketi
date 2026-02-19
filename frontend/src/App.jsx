@@ -1700,7 +1700,7 @@ function RamazanPremiumUIInner() {
             <section className="glass-card countdown">
               <div className="label-row">
                 <span className="dot" />
-                <span className="micro">Ramazan'ın Bitişine Kalan Süre ({targetDate.toLocaleDateString('tr-TR')})</span>
+                <span className="micro">{targetDate.getFullYear()} Ramazan'ın Bitmesine Kalan Süre ({targetDate.toLocaleDateString('tr-TR')})</span>
               </div>
               <div className="count-grid">
                 {countdownCells.map((item) => (
