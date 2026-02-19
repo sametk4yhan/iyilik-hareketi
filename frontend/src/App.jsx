@@ -1489,6 +1489,74 @@ function RamazanPremiumUIInner() {
           color: #b7c2d7;
         }
 
+        .seo-footer {
+          margin-top: 56px;
+          border: 1px solid rgba(255, 255, 255, 0.12);
+          border-radius: 26px;
+          background:
+            radial-gradient(circle at top right, rgba(212, 175, 55, 0.12), transparent 45%),
+            linear-gradient(160deg, rgba(10, 22, 40, 0.92), rgba(2, 6, 23, 0.96));
+          padding: 28px;
+        }
+
+        .seo-article {
+          max-width: 880px;
+          margin: 0 auto;
+          display: grid;
+          gap: 14px;
+          color: #dbe7ff;
+        }
+
+        .seo-kicker {
+          margin: 0;
+          color: #d4af37;
+          font-size: 11px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          font-weight: 800;
+        }
+
+        .seo-article h2 {
+          margin: 0;
+          color: #f8fafc;
+          font-size: clamp(22px, 2.8vw, 34px);
+          line-height: 1.2;
+        }
+
+        .seo-article h3 {
+          margin: 8px 0 0;
+          color: #f5f8ff;
+          font-size: 18px;
+          font-weight: 800;
+        }
+
+        .seo-article p {
+          margin: 0;
+          color: #bac8e2;
+          font-size: 14px;
+          line-height: 1.8;
+        }
+
+        .seo-article ul {
+          margin: 4px 0 2px 18px;
+          padding: 0;
+          color: #e2e8f0;
+          display: grid;
+          gap: 7px;
+          font-size: 14px;
+        }
+
+        .seo-signature {
+          margin: 20px 0 0;
+          text-align: center;
+          opacity: 0.35;
+          font-size: 10px;
+          letter-spacing: 0.5em;
+          text-transform: uppercase;
+          font-weight: 700;
+          color: #b7c2d7;
+        }
+
         .share-card {
           grid-column: span 4;
         }
@@ -1508,6 +1576,18 @@ function RamazanPremiumUIInner() {
 
           .count-item strong { font-size: 44px; }
           .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+          .seo-footer {
+            padding: 20px;
+          }
+
+          .seo-article h2 {
+            font-size: 24px;
+          }
+
+          .seo-article h3 {
+            font-size: 16px;
+          }
         }
           /* Share Card Modal */
 .share-overlay {
@@ -1879,7 +1959,56 @@ function RamazanPremiumUIInner() {
             </section>
           </div>
 
-          <footer className="footer">İyilikle Kalın • 2026</footer>
+          <footer className="seo-footer">
+            <article className="seo-article">
+              <p className="seo-kicker">SEO Makalesi</p>
+              <h2>Ramazan'da İyilik Hareketi: 30 Günde 30 İyilik ile Hayatı Güzelleştirin</h2>
+
+              <p>
+                Ramazan, paylaşmanın, dayanışmanın ve kalpten gelen küçük adımların büyük anlamlar kazandığı özel bir dönemdir.
+                Bu yüzden Ramazan'da iyilik hareketi fikri, hem bireysel hem toplumsal olarak güçlü bir etki yaratır.
+              </p>
+
+              <h3>Ramazan'da İyilik Neden Bu Kadar Önemli?</h3>
+              <p>
+                Ramazan'da iyilik yapmak manevi iklimi güçlendirir. Bir tebessüm, bir iftar paylaşımı veya bir ihtiyaç sahibine destek;
+                toplumda güven ve merhamet duygusunu artırır. Tam da bu noktada düzenli bir plan devreye girer: 30 günde 30 iyilik.
+              </p>
+
+              <h3>30 Günde 30 İyilik Nedir?</h3>
+              <p>
+                30 günde 30 iyilik, Ramazan boyunca her gün en az bir iyi davranışı bilinçli olarak hayata geçirme yaklaşımıdır.
+                Amaç büyük projeler değil, sürdürülebilir ve samimi adımlar atmaktır.
+              </p>
+              <ul>
+                <li>Komşunun kapısını çalıp halini hatırını sormak</li>
+                <li>Yaşlı birinin market ihtiyacını karşılamak</li>
+                <li>Sokak hayvanları için su ve mama bırakmak</li>
+                <li>İftar için bir aileye yemek ulaştırmak</li>
+                <li>Bir çalışanı takdir eden içten bir teşekkür etmek</li>
+              </ul>
+
+              <h3>Dijital İyilik Hareketine Katılmanın Avantajı</h3>
+              <p>
+                Yapılan iyilikleri kaydetmek ve paylaşmak, başkalarına ilham verir. Böylece tek bir iyilik davranışı, çok daha geniş bir
+                toplulukta dalga etkisi oluşturur.
+              </p>
+              <ul>
+                <li>Düzenli motivasyon sağlar</li>
+                <li>Günlük iyilik alışkanlığı oluşturur</li>
+                <li>Topluluk etkisini görünür kılar</li>
+                <li>Yeni Ramazan iyilik fikirleri keşfetmeyi kolaylaştırır</li>
+              </ul>
+
+              <h3>Sonuç: Küçük İyilik, Büyük Dönüşüm</h3>
+              <p>
+                Ramazan'da iyilik hareketi tek seferlik bir kampanya değil, hayatı dönüştüren bir alışkanlıktır. Her gün yapılan küçük bir
+                iyilik, toplumsal bağları güçlendirir ve Ramazan'ın ruhunu daha görünür hale getirir.
+              </p>
+            </article>
+
+            <p className="seo-signature">İyilikle Kalın • 2026</p>
+          </footer>
         </main>
       )}
 
