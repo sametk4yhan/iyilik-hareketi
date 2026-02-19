@@ -1507,15 +1507,6 @@ function RamazanPremiumUIInner() {
           color: #dbe7ff;
         }
 
-        .seo-kicker {
-          margin: 0;
-          color: #d4af37;
-          font-size: 11px;
-          letter-spacing: 0.14em;
-          text-transform: uppercase;
-          font-weight: 800;
-        }
-
         .seo-article h2 {
           margin: 0;
           color: #f8fafc;
@@ -1961,7 +1952,6 @@ function RamazanPremiumUIInner() {
 
           <footer className="seo-footer">
             <article className="seo-article">
-              <p className="seo-kicker">SEO Makalesi</p>
               <h2>Ramazan'da İyilik Hareketi: 30 Günde 30 İyilik ile Hayatı Güzelleştirin</h2>
 
               <p>
