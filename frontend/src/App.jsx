@@ -19,19 +19,10 @@ function getCountdownParts(targetDate) {
   };
 }
 
-function getTargetRamadanDate() {
-  const base = new Date(CONFIG.RAMAZAN_START);
-  if (Number.isNaN(base.getTime())) return new Date();
-
-  const now = new Date();
-  const candidate = new Date(base);
-  candidate.setFullYear(now.getFullYear());
-
-  if (candidate <= now) {
-    candidate.setFullYear(now.getFullYear() + 1);
-  }
-
-  return candidate;
+function getRamadanEndDate() {
+  const target = new Date(CONFIG.RAMAZAN_END);
+  if (Number.isNaN(target.getTime())) return new Date();
+  return target;
 }
 
 function toSafeDate(value) {
@@ -440,8 +431,8 @@ function AdminPanel({
 
 function RamazanPremiumUIInner() {
   const [time, setTime] = useState(new Date());
-  const [targetDate] = useState(getTargetRamadanDate);
-  const [countdown, setCountdown] = useState(() => getCountdownParts(getTargetRamadanDate()));
+  const [targetDate] = useState(getRamadanEndDate);
+  const [countdown, setCountdown] = useState(() => getCountdownParts(getRamadanEndDate()));
 
   const [iyilikler, setIyilikler] = useState([]);
   const [form, setForm] = useState({ isim: '', soyisim: '', iyilik: '' });
@@ -1688,7 +1679,7 @@ function RamazanPremiumUIInner() {
               <h1 className="title">
                 İyilik <span className="gold">Hareketi</span>
               </h1>
-              <p className="sub">Ramazan 2026 • Topluluk Akışı</p>
+              <p className="sub">Ramazan {targetDate.getFullYear()} • Topluluk Akışı</p>
             </div>
 
             <div className="time-wrap">
@@ -1709,7 +1700,7 @@ function RamazanPremiumUIInner() {
             <section className="glass-card countdown">
               <div className="label-row">
                 <span className="dot" />
-                <span className="micro">Ramazan'a Kalan Süre ({targetDate.toLocaleDateString('tr-TR')})</span>
+                <span className="micro">Ramazan'ın Bitişine Kalan Süre ({targetDate.toLocaleDateString('tr-TR')})</span>
               </div>
               <div className="count-grid">
                 {countdownCells.map((item) => (
